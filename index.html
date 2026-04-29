@@ -185,15 +185,21 @@
 
     // MODAL QR
     function mostrarQR(id) {
-        const qrContainer = document.getElementById("qrcode");
-        qrContainer.innerHTML = "";
-        new QRCode(qrContainer, { text: "ID:" + id, width: 180, height: 180 });
-        document.getElementById("qr-modal").classList.remove("hidden");
-    }
+    const qrContainer = document.getElementById("qrcode");
+    qrContainer.innerHTML = "";
+    
+    // Esto detecta automáticamente si estás en localhost o en Vercel
+    const urlBase = window.location.origin; 
+    const linkFinal = `${urlBase}/?id=${id}`;
 
-    function cerrarModal() {
-        document.getElementById("qr-modal").classList.add("hidden");
-    }
+    new QRCode(qrContainer, { 
+        text: linkFinal, // Ahora sí es un link que el celular puede abrir
+        width: 180, 
+        height: 180 
+    });
+
+    document.getElementById("qr-modal").classList.remove("hidden");
+}
 
     cargarTickets();
     </script>
