@@ -7,6 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body class="bg-gray-50 font-sans">
 
@@ -73,6 +74,14 @@
                 </table>
             </div>
         </section>
+        <div id="qr-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-xl p-8 max-w-sm w-full text-center shadow-2xl">
+        <h3 class="text-xl font-bold mb-4 text-gray-800">Ticket Generado</h3>
+        <div id="qrcode" class="flex justify-center mb-6"></div>
+        <p class="text-sm text-gray-500 mb-6">Escaneá este código para ver el estado del equipo.</p>
+        <button onclick="cerrarModal()" class="w-full bg-indigo-600 text-white py-2 rounded-lg font-bold">CERRAR</button>
+    </div>
+            
     </main>
 
     <script>
@@ -187,6 +196,23 @@
     }
 
     cargarTickets();
+        function mostrarQR(id) {
+    const qrContainer = document.getElementById("qrcode");
+    qrContainer.innerHTML = ""; // Limpiamos si había uno antes
+    
+    // Generamos el QR con la URL de tu app + el ID del ticket
+    new QRCode(qrContainer, {
+        text: window.location.href + "?id=" + id,
+        width: 200,
+        height: 200
+    });
+
+    document.getElementById("qr-modal").classList.remove("hidden");
+}
+
+function cerrarModal() {
+    document.getElementById("qr-modal").classList.add("hidden");
+}
 </script>
 </body>
 </html>
