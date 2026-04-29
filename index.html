@@ -39,12 +39,12 @@
                     </div>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-600 mb-1">Equipo (Modelo y Marca)</label>
-                    <input type="text" id="equipo" placeholder="Ej: iPhone 13 / Notebook HP" class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-indigo-400 outline-none transition" required>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">Equipo</label>
+                    <input type="text" id="equipo" placeholder="Ej: Samsung S23 / Dell Inspiron" class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-indigo-400 outline-none transition" required>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-600 mb-1">Falla Reportada</label>
-                    <textarea id="falla" rows="3" placeholder="¿Qué problema tiene?" class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-indigo-400 outline-none transition" required></textarea>
+                    <textarea id="falla" rows="3" placeholder="Descripción del problema" class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-indigo-400 outline-none transition" required></textarea>
                 </div>
                 <button type="submit" id="submit-btn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg shadow-lg uppercase tracking-wider transition duration-300">
                     GENERAR TICKET Y QR
@@ -88,6 +88,7 @@
     const SUPABASE_URL = 'https://sjgdcoxpugmxiestdwsp.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_Uu0v9l0e-RkbUTllvXoYHQ_vRvWCPj7'; 
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const PASSWORD_PANEL = "Marcosxmagui04";
 
     const repairForm = document.getElementById('repair-form');
     const tableBody = document.getElementById('table-body');
@@ -106,18 +107,14 @@
 
         if (editandoId) {
             const { error } = await _supabase.from('tickets').update(ticketData).eq('id', editandoId);
-            if (error) alert("Error: " + error.message);
-            else {
-                alert("Ticket #" + editandoId + " actualizado.");
+            if (!error) {
                 editandoId = null;
                 resetBoton();
             }
         } else {
-            const { data, error } = await _supabase.from('tickets').insert([{ ...ticketData, estado: 'Pendiente' }]).select();
-            if (error) alert("Error: " + error.message);
-            else if (data) mostrarQR(data[0].id);
+            const { data } = await _supabase.from('tickets').insert([{ ...ticketData, estado: 'Pendiente' }]).select();
+            if (data) mostrarQR(data[0].id);
         }
-        
         repairForm.reset();
         cargarTickets();
     });
@@ -145,6 +142,18 @@
                         </div>
                     </div>`;
                 document.body.style.visibility = 'visible';
+                return;
+            }
+        }
+
+        let acceso = sessionStorage.getItem("admin_access");
+        if (acceso !== "true") {
+            let pass = prompt("Acceso restringido. Ingrese la contraseña:");
+            if (pass === PASSWORD_PANEL) {
+                sessionStorage.setItem("admin_access", "true");
+            } else {
+                alert("Incorrecto.");
+                window.location.reload();
                 return;
             }
         }
