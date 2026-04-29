@@ -224,13 +224,15 @@
     ticketCount.innerText = `${data.length} Activos`;
 }
     // MODAL QR
-   function mostrarQR(id) {
+  function mostrarQR(id) {
     const qrContainer = document.getElementById("qrcode");
     qrContainer.innerHTML = "";
     
-    const urlPublica = 'https://techfix-os.vercel.app'; 
-    
-    const linkFinal = `${urlPublica}/?id=${id}`;
+    // Esta línea toma la dirección exacta de tu navegador (sea cual sea)
+    const urlLimpia = window.location.origin + window.location.pathname;
+    const linkFinal = `${urlLimpia}?id=${id}`;
+
+    console.log("Generando QR para:", linkFinal); // Esto es para que vos lo veas en la consola (F12)
 
     new QRCode(qrContainer, { 
         text: linkFinal, 
