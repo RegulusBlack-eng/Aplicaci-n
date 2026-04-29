@@ -90,51 +90,84 @@
     </main>
 </body>
     <script>
-        // Seleccionamos el formulario y la tabla
-        const repairForm = document.getElementById('repair-form');
-        const tableBody = document.getElementById('table-body');
-        const ticketCount = document.getElementById('ticket-count');
-        let count = 1; // Contador de tickets para el ejemplo
+    // 1. Configuración de conexión (Asegúrate de pegar la KEY luego)
+    const SUPABASE_URL = 'https://sjgdcoxpugmxiestdwsp.supabase.co';
+    const SUPABASE_KEY = 'TU_KEY_ANON_AQUI'; 
 
-        repairForm.addEventListener('submit', function(e) {
-            e.preventDefault(); // Evita que la página se recargue
+    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-            // 1. Capturamos los datos de los inputs
-            const cliente = document.getElementById('cliente').value;
-            const whatsapp = document.getElementById('whatsapp').value;
-            const equipo = document.getElementById('equipo').value;
-            const falla = document.getElementById('falla').value;
+    // 2. Referencias a la interfaz
+    const repairForm = document.getElementById('repair-form');
+    const tableBody = document.getElementById('table-body');
+    const ticketCount = document.getElementById('ticket-count');
 
-            // 2. Generamos un ID de ticket único (Simulado)
-            const ticketId = `#TF-${1002 + count}`;
-            count++;
+    // 3. Función para guardar un nuevo equipo en la nube
+    repairForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
 
-            // 3. Creamos la nueva fila (Template String)
-            const nuevaFila = `
-                <tr class="border-b border-gray-200 hover:bg-gray-50 transition animate-pulse">
-                    <td class="py-3 px-6 font-mono font-bold text-indigo-600">${ticketId}</td>
-                    <td class="py-3 px-6">
-                        <div class="font-bold">${cliente}</div>
-                        <div class="text-xs text-gray-400 font-medium">${equipo} - ${falla}</div>
-                    </td>
-                    <td class="py-3 px-6">
-                        <span class="bg-red-100 text-red-600 py-1 px-3 rounded-full text-xs font-bold">Pendiente</span>
-                    </td>
-                    <td class="py-3 px-6 text-center">
-                        <button class="text-indigo-600 hover:text-indigo-900 mx-2"><i class="fas fa-edit"></i></button>
-                        <button class="text-green-600 hover:text-green-900 mx-2"><i class="fas fa-check"></i></button>
-                    </td>
-                </tr>
-            `;
+        // Capturamos los valores de los inputs por su ID
+        const nuevoTicket = {
+            cliente: document.getElementById('cliente').value,
+            whatsapp: document.getElementById('whatsapp').value,
+            equipo: document.getElementById('equipo').value,
+            falla: document.getElementById('falla').value,
+            estado: 'Pendiente'
+        };
 
-            // 4. Insertamos la fila al principio de la tabla
-            tableBody.insertAdjacentHTML('afterbegin', nuevaFila);
+        // Insertamos en la tabla 'tickets' de Supabase
+        const { data, error } = await _supabase
+            .from('tickets')
+            .insert([nuevoTicket])
+            .select();
 
-            // 5. Limpiamos el formulario y actualizamos el contador
+        if (error) {
+            console.error("Error detallado:", error);
+            alert("Error al guardar: " + error.message);
+        } else {
+            alert("¡Equipo registrado con éxito en la nube!");
             repairForm.reset();
-            ticketCount.innerText = `${count + 1} Activos`;
-            
-            alert("¡Ticket generado con éxito!");
-        });
-    </script>
+            cargarTickets(); // Refrescamos la tabla automáticamente
+        }
+    });
+
+    // 4. Función para cargar los datos desde Supabase y dibujarlos
+    async function cargarTickets() {
+        const { data, error } = await _supabase
+            .from('tickets')
+            .select('*')
+            .order('id', { ascending: false });
+
+        if (error) {
+            console.error("Error cargando tickets:", error);
+            return;
+        }
+
+        if (data) {
+            tableBody.innerHTML = ''; // Limpiamos la tabla antes de rellenar
+            data.forEach(ticket => {
+                const fila = `
+                    <tr class="border-b border-gray-200 hover:bg-gray-50 transition">
+                        <td class="py-3 px-6 font-mono font-bold text-indigo-600">#${ticket.id}</td>
+                        <td class="py-3 px-6">
+                            <div class="font-bold">${ticket.cliente}</div>
+                            <div class="text-xs text-gray-400 font-medium">${ticket.equipo} - ${ticket.falla}</div>
+                        </td>
+                        <td class="py-3 px-6">
+                            <span class="bg-red-100 text-red-600 py-1 px-3 rounded-full text-xs font-bold">${ticket.estado}</span>
+                        </td>
+                        <td class="py-3 px-6 text-center">
+                            <button class="text-indigo-600 hover:text-indigo-900 mx-2"><i class="fas fa-edit"></i></button>
+                            <button class="text-green-600 hover:text-green-900 mx-2"><i class="fas fa-check"></i></button>
+                        </td>
+                    </tr>
+                `;
+                tableBody.insertAdjacentHTML('beforeend', fila);
+            });
+            ticketCount.innerText = `${data.length} Activos`;
+        }
+    }
+
+    // Ejecutamos la carga inicial al abrir la página
+    cargarTickets();
+</script>
 </html>
