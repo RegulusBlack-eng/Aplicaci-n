@@ -48,6 +48,9 @@
 
                 <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg shadow-lg transition duration-300">
                     GENERAR TICKET Y QR
+                    <button type="submit" id="submit-btn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg shadow-lg transition duration-300">
+    GENERAR TICKET Y QR
+                        
                 </button>
             </form>
         </section>
@@ -83,54 +86,77 @@
     const repairForm = document.getElementById('repair-form');
     const tableBody = document.getElementById('table-body');
     const ticketCount = document.getElementById('ticket-count');
+    const submitBtn = document.getElementById('submit-btn');
 
+    let editandoId = null; // Guardará el ID del ticket que estamos editando
+
+    // GUARDAR O ACTUALIZAR TICKET
     repairForm.addEventListener('submit', async function(e) {
         e.preventDefault();
 
-        const nuevoTicket = {
+        const ticketData = {
             cliente: document.getElementById('cliente').value,
             whatsapp: document.getElementById('whatsapp').value,
             equipo: document.getElementById('equipo').value,
-            falla: document.getElementById('falla').value,
-            estado: 'Pendiente'
+            falla: document.getElementById('falla').value
         };
 
-        const { error } = await _supabase
-            .from('tickets')
-            .insert([nuevoTicket]);
+        if (editandoId) {
+            // MODO EDICIÓN: Actualizamos el registro existente
+            const { error } = await _supabase
+                .from('tickets')
+                .update(ticketData)
+                .eq('id', editandoId);
 
-        if (error) {
-            alert("Error al guardar: " + error.message);
+            if (error) {
+                alert("Error al actualizar: " + error.message);
+            } else {
+                alert("¡Ticket actualizado!");
+                editandoId = null;
+                submitBtn.innerText = "GENERAR TICKET Y QR";
+                submitBtn.classList.replace('bg-indigo-600', 'bg-green-600');
+            }
         } else {
-            alert("¡Equipo registrado con éxito!");
-            repairForm.reset();
-            cargarTickets(); 
+            // MODO NUEVO: Insertamos uno nuevo
+            const { error } = await _supabase
+                .from('tickets')
+                .insert([{ ...ticketData, estado: 'Pendiente' }]);
+
+            if (error) {
+                alert("Error al guardar: " + error.message);
+            } else {
+                alert("¡Equipo registrado!");
+            }
         }
+
+        repairForm.reset();
+        cargarTickets(); 
     });
 
-    async function finalizarTicket(id) {
-        const { error } = await _supabase
-            .from('tickets')
-            .update({ estado: 'Listo' })
-            .eq('id', id);
+    // CARGAR DATOS EN EL FORMULARIO PARA EDITAR
+    async function prepararEdicion(id, cliente, whatsapp, equipo, falla) {
+        document.getElementById('cliente').value = cliente;
+        document.getElementById('whatsapp').value = whatsapp;
+        document.getElementById('equipo').value = equipo;
+        document.getElementById('falla').value = falla;
 
-        if (error) {
-            alert("Error al actualizar: " + error.message);
-        } else {
-            cargarTickets();
-        }
+        editandoId = id;
+        submitBtn.innerText = "GUARDAR CAMBIOS (Ticket #" + id + ")";
+        submitBtn.classList.replace('bg-green-600', 'bg-indigo-600');
+        
+        // Hacemos scroll hacia arriba para que veas el formulario
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    async function finalizarTicket(id) {
+        const { error } = await _supabase.from('tickets').update({ estado: 'Listo' }).eq('id', id);
+        if (error) alert("Error: " + error.message);
+        else cargarTickets();
     }
         
     async function cargarTickets() {
-        const { data, error } = await _supabase
-            .from('tickets')
-            .select('*')
-            .order('id', { ascending: false });
-
-        if (error) {
-            console.error("Error cargando tickets:", error);
-            return;
-        }
+        const { data, error } = await _supabase.from('tickets').select('*').order('id', { ascending: false });
+        if (error) return;
 
         if (data) {
             tableBody.innerHTML = ''; 
@@ -148,7 +174,9 @@
                             <span class="${colorClase} py-1 px-3 rounded-full text-xs font-bold">${ticket.estado}</span>
                         </td>
                         <td class="py-3 px-6 text-center">
-                            <button class="text-indigo-600 hover:text-indigo-900 mx-2"><i class="fas fa-edit"></i></button>
+                            <button onclick="prepararEdicion(${ticket.id}, '${ticket.cliente}', '${ticket.whatsapp}', '${ticket.equipo}', '${ticket.falla}')" class="text-indigo-600 hover:text-indigo-900 mx-2">
+                                <i class="fas fa-edit"></i>
+                            </button>
                             <button onclick="finalizarTicket(${ticket.id})" class="text-green-600 hover:text-green-900 mx-2">
                                 <i class="fas fa-check"></i>
                             </button>
@@ -162,6 +190,6 @@
     }
 
     cargarTickets();
-    </script>
+</script>
 </body>
 </html>
