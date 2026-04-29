@@ -89,7 +89,7 @@
 
     let editandoId = null;
 
-    // GUARDAR O ACTUALIZAR
+   
     repairForm.addEventListener('submit', async function(e) {
         e.preventDefault();
         const ticketData = {
@@ -120,7 +120,7 @@
         cargarTickets();
     });
 
-    // EDITAR
+ 
     function prepararEdicion(id, cliente, whatsapp, equipo, falla) {
         document.getElementById('cliente').value = cliente;
         document.getElementById('whatsapp').value = whatsapp;
@@ -132,14 +132,14 @@
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    // FINALIZAR
+
     async function finalizarTicket(id) {
         const { error } = await _supabase.from('tickets').update({ estado: 'Listo' }).eq('id', id);
         if (error) alert("Error: " + error.message);
         else cargarTickets();
     }
 
-    // BORRAR (Tachito rojo)
+  
     async function borrarTicket(id) {
         if(confirm("¿Estás seguro de borrar este ticket? Esta acción no se puede deshacer.")) {
             const { error } = await _supabase.from('tickets').delete().eq('id', id);
@@ -148,14 +148,12 @@
         }
     }
 
-    // CARGAR LISTA
-   async function cargarTickets() {
-    // 1. Vemos si hay un ID en la URL (ej: ?id=15)
+  async function cargarTickets() {
     const urlParams = new URLSearchParams(window.location.search);
     const clienteId = urlParams.get('id');
 
     if (clienteId) {
-        // MODO CLIENTE: Solo buscamos el ticket del QR
+        
         const { data, error } = await _supabase
             .from('tickets')
             .select('*')
@@ -163,31 +161,38 @@
             .single();
 
         if (data) {
-            // Reemplazamos toda la pantalla por un mensaje para el cliente
+          
             document.body.innerHTML = `
                 <div class="min-h-screen bg-indigo-700 flex items-center justify-center p-6 text-white font-sans">
                     <div class="bg-white text-gray-800 p-8 rounded-2xl shadow-2xl max-w-sm w-full text-center">
-                        <h1 class="text-2xl font-bold mb-2">Estado de tu Reparación</h1>
-                        <p class="text-gray-500 mb-6 font-mono">Ticket #${data.id}</p>
+                        <h1 class="text-2xl font-bold mb-2">TechFix OS</h1>
+                        <p class="text-gray-400 mb-6 text-sm italic">Estado de tu reparación</p>
                         
-                        <div class="py-4 px-6 rounded-xl mb-6 ${data.estado === 'Listo' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}">
-                            <span class="text-3xl font-black uppercase">${data.estado}</span>
+                        <div class="py-6 px-4 rounded-xl mb-6 ${data.estado === 'Listo' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}">
+                            <p class="text-xs uppercase font-bold mb-1">Estado Actual</p>
+                            <span class="text-4xl font-black uppercase tracking-tight">${data.estado}</span>
                         </div>
 
-                        <div class="text-left space-y-2 border-t pt-4">
+                        <div class="text-left space-y-3 border-t pt-4 text-sm">
+                            <p><strong>Ticket:</strong> #${data.id}</p>
                             <p><strong>Equipo:</strong> ${data.equipo}</p>
                             <p><strong>Falla:</strong> ${data.falla}</p>
                         </div>
-                        
-                        <button onclick="window.location.href=window.location.origin" class="mt-8 text-indigo-600 text-sm font-bold">
-                            Ir al Panel de Control
-                        </button>
+
+                        <div class="mt-8 pt-4 border-t text-xs text-gray-400">
+                            <p>Gracias por confiar en nosotros.</p>
+                        </div>
                     </div>
                 </div>
             `;
-            return; // Cortamos acá para que no cargue el resto de la web
+            return; 
         }
     }
+
+   
+    const { data, error } = await _supabase.from('tickets').select('*').order('id', { ascending: false });
+    
+}
 
     // MODO DASHBOARD (Lo que ya tenías)
     const { data, error } = await _supabase.from('tickets').select('*').order('id', { ascending: false });
@@ -223,16 +228,15 @@
     });
     ticketCount.innerText = `${data.length} Activos`;
 }
-    // MODAL QR
   function mostrarQR(id) {
     const qrContainer = document.getElementById("qrcode");
     qrContainer.innerHTML = "";
     
-    // Esta línea toma la dirección exacta de tu navegador (sea cual sea)
+
     const urlLimpia = window.location.origin + window.location.pathname;
     const linkFinal = `${urlLimpia}?id=${id}`;
 
-    console.log("Generando QR para:", linkFinal); // Esto es para que vos lo veas en la consola (F12)
+    console.log("Generando QR para:", linkFinal);
 
     new QRCode(qrContainer, { 
         text: linkFinal, 
