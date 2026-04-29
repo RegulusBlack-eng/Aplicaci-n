@@ -129,9 +129,20 @@
             cargarTickets(); // Refrescamos la tabla automáticamente
         }
     });
+async function finalizarTicket(id) {
+        const { error } = await _supabase
+            .from('tickets')
+            .update({ estado: 'Listo' }) // Cambiamos el estado
+            .eq('id', id); // Solo para ese ID específico
 
-    // 4. Función para cargar los datos desde Supabase y dibujarlos
-    async function cargarTickets() {
+        if (error) {
+            alert("Error al actualizar: " + error.message);
+        } else {
+            cargarTickets(); // Recargamos la tabla para ver el cambio de color
+        }
+    }
+        
+  async function cargarTickets() {
         const { data, error } = await _supabase
             .from('tickets')
             .select('*')
@@ -141,6 +152,37 @@
             console.error("Error cargando tickets:", error);
             return;
         }
+
+        if (data) {
+            tableBody.innerHTML = ''; 
+            data.forEach(ticket => {
+                // Si el estado es 'Listo', le ponemos color verde, si no, rojo.
+                const colorClase = ticket.estado === 'Listo' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600';
+                
+                const fila = `
+                    <tr class="border-b border-gray-200 hover:bg-gray-50 transition">
+                        <td class="py-3 px-6 font-mono font-bold text-indigo-600">#${ticket.id}</td>
+                        <td class="py-3 px-6">
+                            <div class="font-bold">${ticket.cliente}</div>
+                            <div class="text-xs text-gray-400 font-medium">${ticket.equipo} - ${ticket.falla}</div>
+                        </td>
+                        <td class="py-3 px-6">
+                            <span class="${colorClase} py-1 px-3 rounded-full text-xs font-bold">${ticket.estado}</span>
+                        </td>
+                        <td class="py-3 px-6 text-center">
+                            <button class="text-indigo-600 hover:text-indigo-900 mx-2"><i class="fas fa-edit"></i></button>
+                            
+                         <button onclick="finalizarTicket(${ticket.id})" class="text-green-600 hover:text-green-900 mx-2">
+    <i class="fas fa-check"></i>
+</button>
+                        </td>
+                    </tr>
+                `;
+                tableBody.insertAdjacentHTML('beforeend', fila);
+            });
+            ticketCount.innerText = `${data.length} Activos`;
+        }
+    }
 
         if (data) {
             tableBody.innerHTML = ''; // Limpiamos la tabla antes de rellenar
