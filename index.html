@@ -21,10 +21,8 @@
     </nav>
 
     <main class="container mx-auto p-6">
-        
         <section class="max-w-2xl mx-auto bg-white rounded-xl shadow-md overflow-hidden p-8 mb-10">
             <h2 class="text-xl font-semibold mb-6 border-b pb-2 text-gray-700">Registro de Nuevo Equipo</h2>
-            
             <form id="repair-form" class="space-y-4">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
@@ -36,20 +34,17 @@
                         <input type="tel" id="whatsapp" placeholder="Sin el + ni el 15" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-indigo-400 outline-none" required>
                     </div>
                 </div>
-
                 <div>
                     <label class="block text-sm font-medium text-gray-600">Equipo (Modelo y Marca)</label>
-                    <input type="text" id="equipo" placeholder="Ej: Samsung S23 Ultra / Dell Inspiron 15" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-indigo-400 outline-none" required>
+                    <input type="text" id="equipo" placeholder="Ej: Samsung S23 Ultra" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-indigo-400 outline-none" required>
                 </div>
-
                 <div>
                     <label class="block text-sm font-medium text-gray-600">Falla Reportada</label>
                     <textarea id="falla" rows="3" placeholder="Describe el problema..." class="w-full p-2 border rounded-md focus:ring-2 focus:ring-indigo-400 outline-none" required></textarea>
                 </div>
-                
-             <button type="submit" id="submit-btn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg shadow-lg transition duration-300">
-    GENERAR TICKET Y QR
-</button>
+                <button type="submit" id="submit-btn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg shadow-lg transition duration-300">
+                    GENERAR TICKET Y QR
+                </button>
             </form>
         </section>
 
@@ -58,30 +53,28 @@
                 <h2 class="text-xl font-semibold text-gray-700">Equipos en Taller</h2>
                 <span id="ticket-count" class="bg-indigo-100 text-indigo-700 text-xs font-bold px-2.5 py-0.5 rounded-full">0 Activos</span>
             </div>
-            
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
                     <thead>
                         <tr class="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
                             <th class="py-3 px-6">ID Ticket</th>
                             <th class="py-3 px-6">Cliente / Equipo</th>
-                            <th class="py-3 px-6">Estado</th>
+                            <th class="py-3 px-6 text-center">Estado</th>
                             <th class="py-3 px-6 text-center">Acciones</th>
                         </tr>
                     </thead>
-                    <tbody id="table-body" class="text-gray-600 text-sm">
-                        </tbody>
+                    <tbody id="table-body" class="text-gray-600 text-sm"></tbody>
                 </table>
             </div>
         </section>
+
         <div id="qr-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-    <div class="bg-white rounded-xl p-8 max-w-sm w-full text-center shadow-2xl">
-        <h3 class="text-xl font-bold mb-4 text-gray-800">Ticket Generado</h3>
-        <div id="qrcode" class="flex justify-center mb-6"></div>
-        <p class="text-sm text-gray-500 mb-6">Escaneá este código para ver el estado del equipo.</p>
-        <button onclick="cerrarModal()" class="w-full bg-indigo-600 text-white py-2 rounded-lg font-bold">CERRAR</button>
-    </div>
-            
+            <div class="bg-white rounded-xl p-8 max-w-sm w-full text-center shadow-2xl">
+                <h3 class="text-xl font-bold mb-4 text-gray-800">Ticket Generado</h3>
+                <div id="qrcode" class="flex justify-center mb-6"></div>
+                <button onclick="cerrarModal()" class="w-full bg-indigo-600 text-white py-2 rounded-lg font-bold">CERRAR</button>
+            </div>
+        </div>
     </main>
 
     <script>
@@ -94,12 +87,11 @@
     const ticketCount = document.getElementById('ticket-count');
     const submitBtn = document.getElementById('submit-btn');
 
-    let editandoId = null; // Guardará el ID del ticket que estamos editando
+    let editandoId = null;
 
-    // GUARDAR O ACTUALIZAR TICKET
+    // GUARDAR O ACTUALIZAR
     repairForm.addEventListener('submit', async function(e) {
         e.preventDefault();
-
         const ticketData = {
             cliente: document.getElementById('cliente').value,
             whatsapp: document.getElementById('whatsapp').value,
@@ -108,111 +100,102 @@
         };
 
         if (editandoId) {
-            // MODO EDICIÓN: Actualizamos el registro existente
-            const { error } = await _supabase
-                .from('tickets')
-                .update(ticketData)
-                .eq('id', editandoId);
-
-            if (error) {
-                alert("Error al actualizar: " + error.message);
-            } else {
-                alert("¡Ticket actualizado!");
+            const { error } = await _supabase.from('tickets').update(ticketData).eq('id', editandoId);
+            if (error) alert("Error: " + error.message);
+            else {
+                alert("Ticket actualizado");
                 editandoId = null;
                 submitBtn.innerText = "GENERAR TICKET Y QR";
                 submitBtn.classList.replace('bg-indigo-600', 'bg-green-600');
             }
         } else {
-            // MODO NUEVO: Insertamos uno nuevo
-            const { error } = await _supabase
-                .from('tickets')
-                .insert([{ ...ticketData, estado: 'Pendiente' }]);
-
-            if (error) {
-                alert("Error al guardar: " + error.message);
-            } else {
-                alert("¡Equipo registrado!");
+            const { data, error } = await _supabase.from('tickets').insert([{ ...ticketData, estado: 'Pendiente' }]).select();
+            if (error) alert("Error: " + error.message);
+            else {
+                alert("Equipo registrado");
+                mostrarQR(data[0].id);
             }
         }
-
         repairForm.reset();
-        cargarTickets(); 
+        cargarTickets();
     });
 
-    // CARGAR DATOS EN EL FORMULARIO PARA EDITAR
-    async function prepararEdicion(id, cliente, whatsapp, equipo, falla) {
+    // EDITAR
+    function prepararEdicion(id, cliente, whatsapp, equipo, falla) {
         document.getElementById('cliente').value = cliente;
         document.getElementById('whatsapp').value = whatsapp;
         document.getElementById('equipo').value = equipo;
         document.getElementById('falla').value = falla;
-
         editandoId = id;
         submitBtn.innerText = "GUARDAR CAMBIOS (Ticket #" + id + ")";
         submitBtn.classList.replace('bg-green-600', 'bg-indigo-600');
-        
-        // Hacemos scroll hacia arriba para que veas el formulario
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
+    // FINALIZAR
     async function finalizarTicket(id) {
         const { error } = await _supabase.from('tickets').update({ estado: 'Listo' }).eq('id', id);
         if (error) alert("Error: " + error.message);
         else cargarTickets();
     }
-        
-    async function cargarTickets() {
-        const { data, error } = await _supabase.from('tickets').select('*').order('id', { ascending: false });
-        if (error) return;
 
-        if (data) {
-            tableBody.innerHTML = ''; 
-            data.forEach(ticket => {
-                const colorClase = ticket.estado === 'Listo' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600';
-                
-                const fila = `
-                    <tr class="border-b border-gray-200 hover:bg-gray-50 transition">
-                        <td class="py-3 px-6 font-mono font-bold text-indigo-600">#${ticket.id}</td>
-                        <td class="py-3 px-6">
-                            <div class="font-bold">${ticket.cliente}</div>
-                            <div class="text-xs text-gray-400 font-medium">${ticket.equipo} - ${ticket.falla}</div>
-                        </td>
-                        <td class="py-3 px-6">
-                            <span class="${colorClase} py-1 px-3 rounded-full text-xs font-bold">${ticket.estado}</span>
-                        </td>
-                        <td class="py-3 px-6 text-center">
-                            <button onclick="prepararEdicion(${ticket.id}, '${ticket.cliente}', '${ticket.whatsapp}', '${ticket.equipo}', '${ticket.falla}')" class="text-indigo-600 hover:text-indigo-900 mx-2">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button onclick="finalizarTicket(${ticket.id})" class="text-green-600 hover:text-green-900 mx-2">
-                                <i class="fas fa-check"></i>
-                            </button>
-                        </td>
-                    </tr>
-                `;
-                tableBody.insertAdjacentHTML('beforeend', fila);
-            });
-            ticketCount.innerText = `${data.length} Activos`;
+    // BORRAR (Tachito rojo)
+    async function borrarTicket(id) {
+        if(confirm("¿Estás seguro de borrar este ticket? Esta acción no se puede deshacer.")) {
+            const { error } = await _supabase.from('tickets').delete().eq('id', id);
+            if (error) alert("Error al borrar: " + error.message);
+            else cargarTickets();
         }
     }
 
+    // CARGAR LISTA
+    async function cargarTickets() {
+        const { data, error } = await _supabase.from('tickets').select('*').order('id', { ascending: false });
+        if (error) return;
+        tableBody.innerHTML = '';
+        data.forEach(ticket => {
+            const colorClase = ticket.estado === 'Listo' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600';
+            const fila = `
+                <tr class="border-b border-gray-200 hover:bg-gray-50 transition">
+                    <td class="py-3 px-6 font-mono font-bold text-indigo-600">#${ticket.id}</td>
+                    <td class="py-3 px-6">
+                        <div class="font-bold">${ticket.cliente}</div>
+                        <div class="text-xs text-gray-400 font-medium">${ticket.equipo} - ${ticket.falla}</div>
+                    </td>
+                    <td class="py-3 px-6 text-center">
+                        <span class="${colorClase} py-1 px-3 rounded-full text-xs font-bold">${ticket.estado}</span>
+                    </td>
+                    <td class="py-3 px-6 text-center flex justify-center">
+                        <button onclick="prepararEdicion(${ticket.id}, '${ticket.cliente}', '${ticket.whatsapp}', '${ticket.equipo}', '${ticket.falla}')" class="text-indigo-600 hover:text-indigo-900 mx-1">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="finalizarTicket(${ticket.id})" class="text-green-600 hover:text-green-900 mx-1">
+                            <i class="fas fa-check"></i>
+                        </button>
+                        <button onclick="borrarTicket(${ticket.id})" class="text-red-500 hover:text-red-700 mx-1">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+            tableBody.insertAdjacentHTML('beforeend', fila);
+        });
+        ticketCount.innerText = `${data.length} Activos`;
+    }
+
+    // MODAL QR
+    function mostrarQR(id) {
+        const qrContainer = document.getElementById("qrcode");
+        qrContainer.innerHTML = "";
+        new QRCode(qrContainer, { text: "ID:" + id, width: 180, height: 180 });
+        document.getElementById("qr-modal").classList.remove("hidden");
+    }
+
+    function cerrarModal() {
+        document.getElementById("qr-modal").classList.add("hidden");
+    }
+
     cargarTickets();
-        function mostrarQR(id) {
-    const qrContainer = document.getElementById("qrcode");
-    qrContainer.innerHTML = ""; // Limpiamos si había uno antes
-    
-    // Generamos el QR con la URL de tu app + el ID del ticket
-    new QRCode(qrContainer, {
-        text: window.location.href + "?id=" + id,
-        width: 200,
-        height: 200
-    });
-
-    document.getElementById("qr-modal").classList.remove("hidden");
-}
-
-function cerrarModal() {
-    document.getElementById("qr-modal").classList.add("hidden");
-}
-</script>
+    </script>
 </body>
 </html>
