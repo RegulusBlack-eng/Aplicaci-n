@@ -224,16 +224,16 @@
     ticketCount.innerText = `${data.length} Activos`;
 }
     // MODAL QR
-    function mostrarQR(id) {
+   function mostrarQR(id) {
     const qrContainer = document.getElementById("qrcode");
     qrContainer.innerHTML = "";
     
-    // Esto detecta automáticamente si estás en localhost o en Vercel
-    const urlBase = window.location.origin; 
-    const linkFinal = `${urlBase}/?id=${id}`;
+    const urlPublica = 'https://techfix-os.vercel.app'; 
+    
+    const linkFinal = `${urlPublica}/?id=${id}`;
 
     new QRCode(qrContainer, { 
-        text: linkFinal, // Ahora sí es un link que el celular puede abrir
+        text: linkFinal, 
         width: 180, 
         height: 180 
     });
