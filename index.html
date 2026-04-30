@@ -103,6 +103,13 @@
             whatsapp: document.getElementById('whatsapp').value,
             equipo: document.getElementById('equipo').value,
             falla: document.getElementById('falla').value
+            const ticketData = {
+    cliente: document.getElementById('cliente').value,
+    whatsapp: document.getElementById('whatsapp').value,
+    equipo: document.getElementById('equipo').value,
+    falla: document.getElementById('falla').value,
+    fecha_ingreso: new Date().toISOString()
+        
         };
 
         if (editandoId) {
