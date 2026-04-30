@@ -165,35 +165,45 @@
         }
 
         tableBody.innerHTML = '';
-        data.forEach(ticket => {
-            const colorClase = ticket.estado === 'Listo' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600';
-            tableBody.innerHTML += `
-                <tr class="border-b hover:bg-gray-50 transition">
-                    <td class="py-4 px-6 font-mono font-bold text-indigo-600">#${ticket.id}</td>
-                    <td class="py-4 px-6">
-                        <div class="font-bold text-gray-800">${ticket.cliente}</div>
-                        <div class="text-xs text-gray-400 font-medium italic">${ticket.equipo}</div>
-                    </td>
-                    <td class="py-4 px-6 text-center">
-                        <span class="${colorClase} py-1 px-3 rounded-full text-xs font-black uppercase tracking-tighter">${ticket.estado}</span>
-                    </td>
-                    <td class="py-4 px-6 text-center flex justify-center space-x-3 text-lg">
-                        <button onclick="prepararEdicion(${ticket.id},'${ticket.cliente}','${ticket.whatsapp}','${ticket.equipo}','${ticket.falla}')" class="text-indigo-500 hover:text-indigo-800 transition">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button onclick="finalizarTicket(${ticket.id})" class="text-green-500 hover:text-green-800 transition">
-                            <i class="fas fa-check-circle"></i>
-                        </button>
-                        <button onclick="borrarTicket(${ticket.id})" class="text-red-400 hover:text-red-700 transition">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
+
+        if (data.length === 0) {
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="4" class="py-10 text-center text-gray-400 italic font-medium">
+                        <i class="fas fa-check-circle mb-2 block text-2xl opacity-50"></i>
+                        No hay equipos en el taller. ¡Buen trabajo!
                     </td>
                 </tr>`;
-        });
+        } else {
+            data.forEach(ticket => {
+                const colorClase = ticket.estado === 'Listo' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600';
+                tableBody.innerHTML += `
+                    <tr class="border-b hover:bg-gray-50 transition">
+                        <td class="py-4 px-6 font-mono font-bold text-indigo-600">#${ticket.id}</td>
+                        <td class="py-4 px-6">
+                            <div class="font-bold text-gray-800">${ticket.cliente}</div>
+                            <div class="text-xs text-gray-400 font-medium italic">${ticket.equipo}</div>
+                        </td>
+                        <td class="py-4 px-6 text-center">
+                            <span class="${colorClase} py-1 px-3 rounded-full text-xs font-black uppercase tracking-tighter">${ticket.estado}</span>
+                        </td>
+                        <td class="py-4 px-6 text-center flex justify-center space-x-3 text-lg">
+                            <button onclick="prepararEdicion(${ticket.id},'${ticket.cliente}','${ticket.whatsapp}','${ticket.equipo}','${ticket.falla}')" class="text-indigo-500 hover:text-indigo-800 transition">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button onclick="finalizarTicket(${ticket.id})" class="text-green-500 hover:text-green-800 transition">
+                                <i class="fas fa-check-circle"></i>
+                            </button>
+                            <button onclick="borrarTicket(${ticket.id})" class="text-red-400 hover:text-red-700 transition">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </td>
+                    </tr>`;
+            });
+        }
         ticketCount.innerText = `${data.length} Activos`;
         document.body.style.visibility = 'visible';
     }
-
     function prepararEdicion(id, cliente, whatsapp, equipo, falla) {
         document.getElementById('cliente').value = cliente;
         document.getElementById('whatsapp').value = whatsapp;
