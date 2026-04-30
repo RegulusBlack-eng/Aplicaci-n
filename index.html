@@ -175,12 +175,23 @@
 
         if (data.length === 0) {
             tableBody.innerHTML = `
-                <tr>
-                    <td colspan="4" class="py-10 text-center text-gray-400 italic font-medium">
-                        <i class="fas fa-check-circle mb-2 block text-2xl opacity-50"></i>
-                        No hay equipos en el taller. ¡Buen trabajo!
-                    </td>
-                </tr>`;
+                const fechaFormateada = new Date(ticket.fecha_ingreso).toLocaleString('es-AR', {
+    day: '2-digit',
+    month: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+});
+
+tableBody.innerHTML += `
+    <tr class="border-b hover:bg-gray-50 transition">
+        <td class="py-4 px-6 font-mono font-bold text-indigo-600">#${ticket.id}</td>
+        <td class="py-4 px-6">
+            <div class="font-bold text-gray-800">${ticket.cliente}</div>
+            <div class="text-[10px] text-gray-400 uppercase tracking-tighter">${fechaFormateada} hs</div>
+            <div class="text-xs text-indigo-500 font-medium italic mt-1">${ticket.equipo}</div>
+        </td>
+        <!-- ... el resto de las columnas igual ... -->
+    </tr>`;
         } else {
             data.forEach(ticket => {
                 const colorClase = ticket.estado === 'Listo' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600';
