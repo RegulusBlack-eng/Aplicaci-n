@@ -124,122 +124,102 @@
 
     // 2. Cargar y Mostrar Tickets
     async function cargarTickets() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const clienteId = urlParams.get('id');
+    const urlParams = new URLSearchParams(window.location.search);
+    const clienteId = urlParams.get('id');
 
-        // VISTA DEL CLIENTE
-        if (clienteId) {
-            const { data } = await _supabase.from('tickets').select('*').eq('id', clienteId).single();
-            if (data) {
-                document.body.innerHTML = `
-                    <div class="min-h-screen bg-indigo-700 flex items-center justify-center p-6 text-white">
-                        <div class="bg-white text-gray-800 p-8 rounded-3xl shadow-2xl max-w-sm w-full text-center border-t-8 ${data.estado === 'Listo' ? 'border-green-500' : 'border-red-500'}">
-                            <h1 class="text-2xl font-black mb-2 text-indigo-700 italic">TechFix OS</h1>
-                            <p class="text-gray-400 text-xs uppercase tracking-widest mb-6">Estado de reparación</p>
-                            <div class="py-8 px-4 rounded-2xl mb-6 ${data.estado === 'Listo' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">
-                                <span class="text-5xl font-black uppercase">${data.estado}</span>
-                            </div>
-                            <div class="text-left space-y-4 border-t pt-6 text-sm">
-                                <p class="flex justify-between"><strong>Ingresó:</strong> <span>${new Date(data.fecha_ingreso).toLocaleDateString('es-AR')}</span></p>
-                                <p class="flex justify-between"><strong>Ticket:</strong> <span class="font-mono">#${data.id}</span></p>
-                                <p class="flex justify-between"><strong>Equipo:</strong> <span>${data.equipo}</span></p>
-                                <p class="flex flex-col"><strong>Falla:</strong> <span class="text-gray-500 mt-1">${data.falla}</span></p>
-                            </div>
+    // VISTA DEL CLIENTE
+    if (clienteId) {
+        const { data } = await _supabase.from('tickets').select('*').eq('id', clienteId).single();
+        if (data) {
+            document.body.innerHTML = `
+                <div class="min-h-screen bg-indigo-700 flex items-center justify-center p-6 text-white">
+                    <div class="bg-white text-gray-800 p-8 rounded-3xl shadow-2xl max-w-sm w-full text-center border-t-8 ${data.estado === 'Listo' ? 'border-green-500' : 'border-red-500'}">
+                        <h1 class="text-2xl font-black mb-2 text-indigo-700 italic">TechFix OS</h1>
+                        <p class="text-gray-400 text-xs uppercase tracking-widest mb-6">Estado de reparación</p>
+                        <div class="py-8 px-4 rounded-2xl mb-6 ${data.estado === 'Listo' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">
+                            <span class="text-5xl font-black uppercase">${data.estado}</span>
                         </div>
-                    </div>`;
-                document.body.style.visibility = 'visible';
-                return;
-            }
-        }
-
-        // VISTA DEL ADMINISTRADOR (Login)
-        let acceso = sessionStorage.getItem("admin_access");
-        if (acceso !== "true") {
-            let pass = prompt("Acceso restringido. Ingrese la contraseña:");
-            if (pass === PASSWORD_PANEL) {
-                sessionStorage.setItem("admin_access", "true");
-            } else {
-                alert("Incorrecto.");
-                window.location.reload();
-                return;
-            }
-        }
-
-        const { data, error } = await _supabase.from('tickets').select('*').order('id', { ascending: false });
-        if (error) {
+                        <div class="text-left space-y-4 border-t pt-6 text-sm">
+                            <p class="flex justify-between"><strong>Ingresó:</strong> <span>${new Date(data.fecha_ingreso).toLocaleDateString('es-AR')}</span></p>
+                            <p class="flex justify-between"><strong>Ticket:</strong> <span class="font-mono">#${data.id}</span></p>
+                            <p class="flex justify-between"><strong>Equipo:</strong> <span>${data.equipo}</span></p>
+                            <p class="flex flex-col"><strong>Falla:</strong> <span class="text-gray-500 mt-1">${data.falla}</span></p>
+                        </div>
+                    </div>
+                </div>`;
             document.body.style.visibility = 'visible';
             return;
         }
-
-        tableBody.innerHTML = '';
-        if (data.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="4" class="p-10 text-center text-gray-400">No hay equipos registrados</td></tr>';
-        } else {
-            data.forEach(ticket => {
-                tableBody.innerHTML += `
-    <tr class="border-b hover:bg-gray-50 transition">
-        <td class="py-4 px-6 font-mono font-bold text-indigo-600">#${ticket.id}</td>
-        <td class="py-4 px-6">
-            <div class="font-bold text-gray-800">${ticket.cliente}</div>
-            <div class="text-[10px] text-gray-400 uppercase tracking-tighter">${fechaFormateada} hs</div>
-            <div class="text-xs text-indigo-500 font-medium italic mt-1">${ticket.equipo}</div>
-        </td>
-        <td class="py-4 px-6 text-center">
-            <span class="${colorClase} py-1 px-3 rounded-full text-xs font-black uppercase tracking-tighter">${ticket.estado}</span>
-        </td>
-        <td class="py-4 px-6 text-center flex justify-center space-x-3 text-lg">
-            <!-- NUEVO BOTÓN DE QR -->
-            <button onclick="mostrarQR(${ticket.id})" class="text-gray-400 hover:text-indigo-600 transition" title="Ver QR">
-                <i class="fas fa-qrcode"></i>
-            </button>
-            
-            <button onclick="prepararEdicion(${ticket.id},'${ticket.cliente}','${ticket.whatsapp}','${ticket.equipo}','${ticket.falla}')" class="text-indigo-500 hover:text-indigo-800 transition">
-                <i class="fas fa-edit"></i>
-            </button>
-            <button onclick="finalizarTicket(${ticket.id})" class="text-green-500 hover:text-green-800 transition">
-                <i class="fas fa-check-circle"></i>
-            </button>
-            <button onclick="borrarTicket(${ticket.id})" class="text-red-400 hover:text-red-700 transition">
-                <i class="fas fa-trash-alt"></i>
-            </button>
-        </td>
-    </tr>`;
-                const colorClase = ticket.estado === 'Listo' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600';
-                
-                // Formateamos la fecha para el panel
-                const fechaFormateada = new Date(ticket.fecha_ingreso).toLocaleString('es-AR', {
-                    day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
-                });
-
-                tableBody.innerHTML += `
-                    <tr class="border-b hover:bg-gray-50 transition">
-                        <td class="py-4 px-6 font-mono font-bold text-indigo-600">#${ticket.id}</td>
-                        <td class="py-4 px-6">
-                            <div class="font-bold text-gray-800">${ticket.cliente}</div>
-                            <div class="text-[10px] text-gray-400 uppercase tracking-tighter">${fechaFormateada} hs</div>
-                            <div class="text-xs text-indigo-500 font-medium italic mt-1">${ticket.equipo}</div>
-                        </td>
-                        <td class="py-4 px-6 text-center">
-                            <span class="${colorClase} py-1 px-3 rounded-full text-xs font-black uppercase tracking-tighter">${ticket.estado}</span>
-                        </td>
-                        <td class="py-4 px-6 text-center flex justify-center space-x-3 text-lg">
-                            <button onclick="prepararEdicion(${ticket.id},'${ticket.cliente}','${ticket.whatsapp}','${ticket.equipo}','${ticket.falla}')" class="text-indigo-500 hover:text-indigo-800 transition">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button onclick="finalizarTicket(${ticket.id})" class="text-green-500 hover:text-green-800 transition">
-                                <i class="fas fa-check-circle"></i>
-                            </button>
-                            <button onclick="borrarTicket(${ticket.id})" class="text-red-400 hover:text-red-700 transition">
-                                <i class="fas fa-trash-alt"></i>
-                            </button>
-                        </td>
-                    </tr>`;
-            });
-        }
-        ticketCount.innerText = `${data.length} Activos`;
-        document.body.style.visibility = 'visible';
     }
 
+    // VISTA DEL ADMINISTRADOR (Login)
+    let acceso = sessionStorage.getItem("admin_access");
+    if (acceso !== "true") {
+        let pass = prompt("Acceso restringido. Ingrese la contraseña:");
+        if (pass === PASSWORD_PANEL) {
+            sessionStorage.setItem("admin_access", "true");
+        } else {
+            alert("Incorrecto.");
+            window.location.reload();
+            return;
+        }
+    }
+
+    const { data, error } = await _supabase.from('tickets').select('*').order('id', { ascending: false });
+    
+    if (error) {
+        console.error("Error de Supabase:", error);
+        document.body.style.visibility = 'visible';
+        return;
+    }
+
+    tableBody.innerHTML = '';
+    
+    if (!data || data.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="4" class="p-10 text-center text-gray-400">No hay equipos registrados</td></tr>';
+    } else {
+        data.forEach(ticket => {
+            // 1. PRIMERO DEFINIMOS TODAS LAS VARIABLES
+            const colorClase = ticket.estado === 'Listo' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600';
+            
+            const fechaFormateada = new Date(ticket.fecha_ingreso).toLocaleString('es-AR', {
+                day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
+            });
+
+            // 2. RECIÉN AHORA LAS USAMOS EN EL HTML
+            tableBody.innerHTML += `
+                <tr class="border-b hover:bg-gray-50 transition">
+                    <td class="py-4 px-6 font-mono font-bold text-indigo-600">#${ticket.id}</td>
+                    <td class="py-4 px-6">
+                        <div class="font-bold text-gray-800">${ticket.cliente}</div>
+                        <div class="text-[10px] text-gray-400 uppercase tracking-tighter">${fechaFormateada} hs</div>
+                        <div class="text-xs text-indigo-500 font-medium italic mt-1">${ticket.equipo}</div>
+                    </td>
+                    <td class="py-4 px-6 text-center">
+                        <span class="${colorClase} py-1 px-3 rounded-full text-xs font-black uppercase tracking-tighter">${ticket.estado}</span>
+                    </td>
+                    <td class="py-4 px-6 text-center flex justify-center space-x-3 text-lg">
+                        <button onclick="mostrarQR(${ticket.id})" class="text-gray-400 hover:text-indigo-600 transition" title="Ver QR">
+                            <i class="fas fa-qrcode"></i>
+                        </button>
+                        <button onclick="prepararEdicion(${ticket.id},'${ticket.cliente}','${ticket.whatsapp}','${ticket.equipo}','${ticket.falla}')" class="text-indigo-500 hover:text-indigo-800 transition">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="finalizarTicket(${ticket.id})" class="text-green-500 hover:text-green-800 transition">
+                            <i class="fas fa-check-circle"></i>
+                        </button>
+                        <button onclick="borrarTicket(${ticket.id})" class="text-red-400 hover:text-red-700 transition">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </td>
+                </tr>`;
+        });
+    }
+    
+    ticketCount.innerText = `${data.length} Activos`;
+    // Esto hace que la página se muestre una vez que todo salió bien
+    document.body.style.visibility = 'visible';
+}
     // 3. Funciones de Control
     function prepararEdicion(id, cliente, whatsapp, equipo, falla) {
         document.getElementById('cliente').value = cliente;
