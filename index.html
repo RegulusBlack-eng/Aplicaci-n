@@ -3,14 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TechFix OS - Panel de Cesar</title>
+    <title>TechFix OS - Cesar</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         body { visibility: hidden; }
-        /* Mejora el scroll en móviles */
         .custom-scroll { -webkit-overflow-scrolling: touch; }
     </style>
 </head>
@@ -42,12 +41,12 @@
             </form>
         </section>
 
-        <div class="space-y-4" id="tickets-container">
-            <div class="hidden md:block overflow-hidden bg-white rounded-3xl shadow-lg">
+        <div id="tickets-container">
+            <div class="hidden md:block overflow-hidden bg-white rounded-3xl shadow-lg border border-slate-100">
                 <table class="w-full text-left">
-                    <thead class="bg-slate-100 text-slate-500 text-[10px] font-black uppercase tracking-widest">
+                    <thead class="bg-slate-50 text-slate-400 text-[10px] font-black uppercase tracking-widest">
                         <tr>
-                            <th class="py-4 px-6">ID</th>
+                            <th class="py-4 px-6">ID / Fecha</th>
                             <th class="py-4 px-6">Cliente / Equipo</th>
                             <th class="py-4 px-6 text-center">Estado</th>
                             <th class="py-4 px-6 text-center">Acciones</th>
@@ -64,7 +63,6 @@
         <div class="bg-white p-8 rounded-[2rem] shadow-2xl max-w-sm w-full text-center">
             <div id="qr-code" class="flex justify-center mb-6 p-4 bg-white rounded-2xl border-2 border-indigo-50"></div>
             <h2 class="text-2xl font-bold text-slate-900 mb-2">Link de Seguimiento</h2>
-            <p class="text-slate-500 text-sm mb-8">Cualquier cámara puede escanearlo para ver el estado.</p>
             <button onclick="cerrarModal()" class="w-full bg-slate-100 text-slate-600 py-4 rounded-2xl font-black hover:bg-slate-200 transition">CERRAR</button>
         </div>
     </div>
@@ -95,7 +93,7 @@
                 whatsapp: document.getElementById('whatsapp').value,
                 equipo: document.getElementById('equipo').value,
                 falla: document.getElementById('falla').value,
-                fecha_ingreso: new Date().toISOString()
+                fecha_ingreso: editandoId ? undefined : new Date().toISOString()
             };
 
             if (editandoId) {
@@ -126,17 +124,23 @@
             
             data.forEach(t => {
                 const badge = t.estado === 'Listo' ? 'bg-green-100 text-green-600' : 'bg-rose-100 text-rose-600';
-                const fecha = new Date(t.fecha_ingreso).toLocaleDateString();
+                const fechaObj = new Date(t.fecha_ingreso);
+                const fechaTxt = fechaObj.toLocaleDateString('es-AR', {day:'2-digit', month:'2-digit'});
+                const horaTxt = fechaObj.toLocaleTimeString('es-AR', {hour:'2-digit', minute:'2-digit'});
 
                 // Desktop Row
                 tableBody.innerHTML += `
-                    <tr class="border-b">
-                        <td class="py-4 px-6 font-mono font-bold text-indigo-600">#${t.id}</td>
-                        <td class="py-4 px-6"><div class="font-bold">${t.cliente}</div><div class="text-[10px] text-slate-400">${t.equipo}</div></td>
+                    <tr class="border-b hover:bg-slate-50 transition-colors">
+                        <td class="py-4 px-6">
+                            <div class="font-mono font-bold text-indigo-600">#${t.id}</div>
+                            <div class="text-[10px] text-slate-400 font-bold">${fechaTxt} ${horaTxt}hs</div>
+                        </td>
+                        <td class="py-4 px-6"><div class="font-bold">${t.cliente}</div><div class="text-[10px] text-slate-400 uppercase font-black tracking-tighter">${t.equipo}</div></td>
                         <td class="py-4 px-6 text-center"><span class="${badge} py-1 px-3 rounded-full text-[10px] font-black uppercase">${t.estado}</span></td>
-                        <td class="py-4 px-6 text-center flex justify-center space-x-4 text-xl">
+                        <td class="py-4 px-6 text-center flex justify-center space-x-3 text-xl">
                             <button onclick="enviarLinkWhatsApp('${t.whatsapp}',${t.id},'${t.cliente}')" class="text-emerald-500"><i class="fab fa-whatsapp"></i></button>
                             <button onclick="mostrarQR(${t.id})" class="text-slate-300"><i class="fas fa-qrcode"></i></button>
+                            <button onclick="prepararEdicion(${t.id},'${t.cliente}','${t.whatsapp}','${t.equipo}','${t.falla}')" class="text-blue-400"><i class="fas fa-edit"></i></button>
                             <button onclick="finalizarTicket(${t.id})" class="text-green-500"><i class="fas fa-check-circle"></i></button>
                             <button onclick="borrarTicket(${t.id})" class="text-rose-300"><i class="fas fa-trash"></i></button>
                         </td>
@@ -144,25 +148,40 @@
 
                 // Mobile Card
                 cardsBody.innerHTML += `
-                    <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 relative">
+                    <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100">
                         <div class="flex justify-between items-start mb-4">
                             <div>
-                                <span class="text-[10px] font-black text-indigo-300 uppercase tracking-widest">Ticket #${t.id}</span>
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Ticket #${t.id}</span>
+                                    <span class="text-[10px] font-bold text-slate-300">${fechaTxt} • ${horaTxt}hs</span>
+                                </div>
                                 <h3 class="text-xl font-bold text-slate-800">${t.cliente}</h3>
-                                <p class="text-sm text-slate-500">${t.equipo}</p>
+                                <p class="text-sm text-slate-500 font-medium">${t.equipo}</p>
                             </div>
-                            <span class="${badge} py-1.5 px-4 rounded-full text-[10px] font-black uppercase">${t.estado}</span>
+                            <span class="${badge} py-1.5 px-4 rounded-full text-[10px] font-black uppercase shadow-sm">${t.estado}</span>
                         </div>
-                        <div class="grid grid-cols-4 gap-2 pt-4 border-t border-slate-50">
-                            <button onclick="enviarLinkWhatsApp('${t.whatsapp}',${t.id},'${t.cliente}')" class="bg-emerald-50 text-emerald-600 p-4 rounded-2xl text-xl"><i class="fab fa-whatsapp"></i></button>
-                            <button onclick="mostrarQR(${t.id})" class="bg-slate-50 text-slate-400 p-4 rounded-2xl text-xl"><i class="fas fa-qrcode"></i></button>
-                            <button onclick="finalizarTicket(${t.id})" class="bg-green-50 text-green-600 p-4 rounded-2xl text-xl"><i class="fas fa-check-circle"></i></button>
-                            <button onclick="borrarTicket(${t.id})" class="bg-rose-50 text-rose-400 p-4 rounded-2xl text-xl"><i class="fas fa-trash-alt"></i></button>
+                        <div class="grid grid-cols-5 gap-2 pt-4 border-t border-slate-50">
+                            <button onclick="enviarLinkWhatsApp('${t.whatsapp}',${t.id},'${t.cliente}')" class="bg-emerald-50 text-emerald-600 p-3 rounded-xl text-lg"><i class="fab fa-whatsapp"></i></button>
+                            <button onclick="mostrarQR(${t.id})" class="bg-slate-50 text-slate-400 p-3 rounded-xl text-lg"><i class="fas fa-qrcode"></i></button>
+                            <button onclick="prepararEdicion(${t.id},'${t.cliente}','${t.whatsapp}','${t.equipo}','${t.falla}')" class="bg-blue-50 text-blue-500 p-3 rounded-xl text-lg"><i class="fas fa-edit"></i></button>
+                            <button onclick="finalizarTicket(${t.id})" class="bg-green-50 text-green-600 p-3 rounded-xl text-lg"><i class="fas fa-check-circle"></i></button>
+                            <button onclick="borrarTicket(${t.id})" class="bg-rose-50 text-rose-400 p-3 rounded-xl text-lg"><i class="fas fa-trash-alt"></i></button>
                         </div>
                     </div>`;
             });
             ticketCount.innerText = data.length;
             document.body.style.visibility = 'visible';
+        }
+
+        function prepararEdicion(id, cliente, whatsapp, equipo, falla) {
+            editandoId = id;
+            document.getElementById('cliente').value = cliente;
+            document.getElementById('whatsapp').value = whatsapp;
+            document.getElementById('equipo').value = equipo;
+            document.getElementById('falla').value = falla;
+            submitBtn.innerText = "ACTUALIZAR TICKET";
+            submitBtn.classList.replace('bg-indigo-600', 'bg-orange-500');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         async function renderCliente(id) {
@@ -180,15 +199,14 @@
                                     <span class="text-slate-400 text-[10px] uppercase font-bold tracking-widest">Estado del Equipo</span>
                                     <div class="text-4xl font-black uppercase mt-2 ${data.estado === 'Listo' ? 'text-green-500' : 'text-rose-500'}">${data.estado}</div>
                                 </div>
-                                <div class="space-y-4 text-left bg-slate-50 p-6 rounded-3xl text-sm">
-                                    <div class="flex justify-between"><span class="text-slate-400">Cliente</span><span class="font-bold">${data.cliente}</span></div>
+                                <div class="space-y-4 text-left bg-slate-50 p-6 rounded-3xl text-sm text-slate-600">
                                     <div class="flex justify-between"><span class="text-slate-400">Equipo</span><span class="font-bold">${data.equipo}</span></div>
                                     <div class="border-t border-slate-200 pt-4 mt-4">
                                         <span class="text-slate-400 block mb-1">Falla Reportada</span>
                                         <p class="font-medium text-slate-700 italic">"${data.falla}"</p>
                                     </div>
                                 </div>
-                                <p class="text-[10px] text-slate-300 mt-8 uppercase font-bold">Ticket #${data.id} • ${new Date(data.fecha_ingreso).toLocaleDateString()}</p>
+                                <p class="text-[10px] text-slate-300 mt-8 uppercase font-bold">Ticket #${data.id} • ${new Date(data.fecha_ingreso).toLocaleString()}</p>
                             </div>
                         </div>
                     </div>`;
