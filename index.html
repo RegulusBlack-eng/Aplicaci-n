@@ -98,7 +98,7 @@
 
     function enviarLinkWhatsApp(telefono, idTicket, cliente) {
         const urlTicket = window.location.origin + window.location.pathname + "?id=" + idTicket;
-        const mensaje = `Hola *${cliente}*! Soy Cesar de TechFix OS. Tu equipo ya ingresó al taller. Podés seguir el estado en tiempo real desde este link: ${urlTicket}`;
+        const mensaje = `Hola *${cliente}*! Soy Marcos de TechFix OS. Tu equipo ya ingresó al taller. Podés seguir el estado en tiempo real desde este link: ${urlTicket}`;
         const linkWA = `https://wa.me/${telefono}?text=${encodeURIComponent(mensaje)}`;
         window.open(linkWA, '_blank');
     }
@@ -120,11 +120,7 @@
             editandoId = null;
             resetBoton();
         } else {
-            const { data, error } = await _supabase.from('tickets').insert([{ ...ticketData, estado: 'Pendiente' }]).select();
-            if (data) {
-                enviarLinkWhatsApp(telefono, data[0].id, nombreCliente);
-                mostrarQR(data[0].id);
-            }
+            await _supabase.from('tickets').insert([{ ...ticketData, estado: 'Pendiente' }]);
         }
         repairForm.reset();
         cargarTickets();
@@ -189,6 +185,7 @@
                         <span class="${colorClase} py-1 px-3 rounded-full text-xs font-black uppercase">${ticket.estado}</span>
                     </td>
                     <td class="py-4 px-6 text-center flex justify-center space-x-3 text-lg">
+                        <button onclick="enviarLinkWhatsApp('${ticket.whatsapp}', ${ticket.id}, '${ticket.cliente}')" class="text-green-600 hover:text-green-800"><i class="fab fa-whatsapp"></i></button>
                         <button onclick="mostrarQR(${ticket.id})" class="text-gray-400 hover:text-indigo-600"><i class="fas fa-qrcode"></i></button>
                         <button onclick="prepararEdicion(${ticket.id},'${ticket.cliente}','${ticket.whatsapp}','${ticket.equipo}','${ticket.falla}')" class="text-indigo-500"><i class="fas fa-edit"></i></button>
                         <button onclick="finalizarTicket(${ticket.id})" class="text-green-500"><i class="fas fa-check-circle"></i></button>
