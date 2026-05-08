@@ -2,63 +2,70 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TechFix OS - Gestión de Taller</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TechFix OS - Panel de Cesar</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         body { visibility: hidden; }
+        /* Mejora el scroll en móviles */
+        .custom-scroll { -webkit-overflow-scrolling: touch; }
     </style>
 </head>
-<body class="bg-slate-50 font-sans">
+<body class="bg-slate-50 font-sans text-slate-900">
 
-    <div id="admin-panel" class="max-w-5xl mx-auto p-4 md:p-8">
-        <header class="flex justify-between items-center mb-10">
-            <div>
-                <h1 class="text-4xl font-black text-indigo-900 tracking-tighter italic">TECHFIX OS</h1>
-                <p class="text-slate-500 font-medium">Panel de Control de Cesar</p>
+    <div id="admin-panel" class="max-w-4xl mx-auto p-4 md:p-8">
+        <header class="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-8">
+            <div class="text-center md:text-left">
+                <h1 class="text-3xl md:text-4xl font-black text-indigo-900 tracking-tighter italic">TECHFIX OS</h1>
+                <p class="text-slate-500 text-sm font-medium">Gestión de Taller • Cesar</p>
             </div>
-            <div class="bg-indigo-600 text-white px-6 py-2 rounded-2xl shadow-lg shadow-indigo-200">
-                <span id="ticket-count" class="font-bold text-xl">0</span> <span class="text-xs uppercase opacity-80">Activos</span>
+            <div class="bg-indigo-600 text-white px-6 py-3 rounded-2xl shadow-lg flex justify-center items-center gap-3">
+                <span id="ticket-count" class="font-bold text-2xl leading-none">0</span>
+                <span class="text-[10px] uppercase font-black opacity-80 leading-none">Equipos en<br>taller</span>
             </div>
         </header>
 
-        <section class="bg-white p-8 rounded-3xl shadow-xl border border-slate-100 mb-10">
-            <form id="repair-form" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <input type="text" id="cliente" placeholder="Nombre del Cliente" class="p-4 bg-slate-50 rounded-2xl border-none focus:ring-2 focus:ring-indigo-500 outline-none transition-all" required>
-                <input type="text" id="whatsapp" placeholder="WhatsApp (ej: 54911...)" class="p-4 bg-slate-50 rounded-2xl border-none focus:ring-2 focus:ring-indigo-500 outline-none transition-all" required>
-                <input type="text" id="equipo" placeholder="Equipo (Modelo / Marca)" class="p-4 bg-slate-50 rounded-2xl border-none focus:ring-2 focus:ring-indigo-500 outline-none transition-all" required>
-                <input type="text" id="falla" placeholder="Falla reportada" class="p-4 bg-slate-50 rounded-2xl border-none focus:ring-2 focus:ring-indigo-500 outline-none transition-all" required>
-                <button type="submit" id="submit-btn" class="md:col-span-2 bg-indigo-600 text-white p-4 rounded-2xl font-black uppercase tracking-widest hover:bg-indigo-700 hover:shadow-xl hover:shadow-indigo-100 transition-all">
+        <section class="bg-white p-6 md:p-8 rounded-3xl shadow-xl border border-slate-100 mb-8">
+            <form id="repair-form" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="space-y-4 md:col-span-2">
+                    <input type="text" id="cliente" placeholder="Nombre del Cliente" class="w-full p-4 bg-slate-50 rounded-2xl border-2 border-transparent focus:border-indigo-500 focus:bg-white outline-none transition-all text-lg" required>
+                    <input type="tel" id="whatsapp" placeholder="WhatsApp (ej: 54911...)" class="w-full p-4 bg-slate-50 rounded-2xl border-2 border-transparent focus:border-indigo-500 focus:bg-white outline-none transition-all text-lg" required>
+                </div>
+                <input type="text" id="equipo" placeholder="Equipo (Modelo / Marca)" class="p-4 bg-slate-50 rounded-2xl border-2 border-transparent focus:border-indigo-500 focus:bg-white outline-none transition-all text-lg" required>
+                <input type="text" id="falla" placeholder="Falla reportada" class="p-4 bg-slate-50 rounded-2xl border-2 border-transparent focus:border-indigo-500 focus:bg-white outline-none transition-all text-lg" required>
+                <button type="submit" id="submit-btn" class="md:col-span-2 bg-indigo-600 text-white p-5 rounded-2xl font-black uppercase tracking-widest hover:bg-indigo-700 active:scale-95 transition-all shadow-lg shadow-indigo-200">
                     CREAR TICKET DE INGRESO
                 </button>
             </form>
         </section>
 
-        <div class="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-100">
-            <table class="w-full text-left">
-                <thead class="bg-slate-50 text-slate-400 uppercase text-xs font-black tracking-widest">
-                    <tr>
-                        <th class="py-4 px-6">ID</th>
-                        <th class="py-4 px-6">Cliente / Ingreso</th>
-                        <th class="py-4 px-6 text-center">Estado</th>
-                        <th class="py-4 px-6 text-center">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody id="table-body" class="divide-y divide-slate-50">
-                    </tbody>
-            </table>
+        <div class="space-y-4" id="tickets-container">
+            <div class="hidden md:block overflow-hidden bg-white rounded-3xl shadow-lg">
+                <table class="w-full text-left">
+                    <thead class="bg-slate-100 text-slate-500 text-[10px] font-black uppercase tracking-widest">
+                        <tr>
+                            <th class="py-4 px-6">ID</th>
+                            <th class="py-4 px-6">Cliente / Equipo</th>
+                            <th class="py-4 px-6 text-center">Estado</th>
+                            <th class="py-4 px-6 text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body" class="divide-y divide-slate-100"></tbody>
+                </table>
+            </div>
+            <div id="cards-body" class="md:hidden space-y-4"></div>
         </div>
     </div>
 
-    <div id="qr-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
-        <div class="bg-white p-8 rounded-3xl shadow-2xl max-w-sm w-full text-center">
-            <h2 class="text-xl font-bold mb-2 text-indigo-900">Link del Cliente</h2>
-            <p class="text-slate-400 text-sm mb-6">Escaneá para ver en el móvil</p>
-            <div id="qr-code" class="flex justify-center mb-6 p-4 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200"></div>
-            <button onclick="cerrarModal()" class="w-full bg-slate-100 text-slate-600 py-3 rounded-xl font-bold hover:bg-slate-200 transition">CERRAR</button>
+    <div id="qr-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md hidden items-center justify-center z-50 p-6">
+        <div class="bg-white p-8 rounded-[2rem] shadow-2xl max-w-sm w-full text-center">
+            <div id="qr-code" class="flex justify-center mb-6 p-4 bg-white rounded-2xl border-2 border-indigo-50"></div>
+            <h2 class="text-2xl font-bold text-slate-900 mb-2">Link de Seguimiento</h2>
+            <p class="text-slate-500 text-sm mb-8">Cualquier cámara puede escanearlo para ver el estado.</p>
+            <button onclick="cerrarModal()" class="w-full bg-slate-100 text-slate-600 py-4 rounded-2xl font-black hover:bg-slate-200 transition">CERRAR</button>
         </div>
     </div>
 
@@ -70,16 +77,15 @@
 
         const repairForm = document.getElementById('repair-form');
         const tableBody = document.getElementById('table-body');
+        const cardsBody = document.getElementById('cards-body');
         const ticketCount = document.getElementById('ticket-count');
         const submitBtn = document.getElementById('submit-btn');
         let editandoId = null;
 
-        // Función Manual de WhatsApp
         function enviarLinkWhatsApp(telefono, idTicket, cliente) {
             const urlTicket = window.location.origin + window.location.pathname + "?id=" + idTicket;
             const mensaje = `Hola *${cliente}*! Soy Cesar de TechFix OS. Tu equipo ya ingresó al taller. Podés seguir el estado en tiempo real desde este link: ${urlTicket}`;
-            const linkWA = `https://wa.me/${telefono}?text=${encodeURIComponent(mensaje)}`;
-            window.open(linkWA, '_blank');
+            window.open(`https://wa.me/${telefono}?text=${encodeURIComponent(mensaje)}`, '_blank');
         }
 
         repairForm.addEventListener('submit', async (e) => {
@@ -95,7 +101,8 @@
             if (editandoId) {
                 await _supabase.from('tickets').update(ticketData).eq('id', editandoId);
                 editandoId = null;
-                resetBoton();
+                submitBtn.innerText = "CREAR TICKET DE INGRESO";
+                submitBtn.classList.replace('bg-orange-500', 'bg-indigo-600');
             } else {
                 await _supabase.from('tickets').insert([{ ...ticketData, estado: 'Pendiente' }]);
             }
@@ -105,122 +112,102 @@
 
         async function cargarTickets() {
             const urlParams = new URLSearchParams(window.location.search);
-            const clienteId = urlParams.get('id');
+            if (urlParams.get('id')) { renderCliente(urlParams.get('id')); return; }
 
-            // MODO CLIENTE
-            if (clienteId) {
-                const { data } = await _supabase.from('tickets').select('*').eq('id', clienteId).single();
-                if (data) {
-                    document.body.innerHTML = `
-                        <div class="min-h-screen bg-indigo-700 flex items-center justify-center p-6 text-white">
-                            <div class="bg-white text-gray-800 p-8 rounded-3xl shadow-2xl max-w-sm w-full text-center border-t-8 ${data.estado === 'Listo' ? 'border-green-500' : 'border-red-500'}">
-                                <h1 class="text-2xl font-black mb-2 text-indigo-700 italic">TechFix OS</h1>
-                                <p class="text-gray-400 text-xs uppercase tracking-widest mb-6">Estado de tu reparación</p>
-                                <div class="py-8 px-4 rounded-2xl mb-6 ${data.estado === 'Listo' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">
-                                    <span class="text-5xl font-black uppercase">${data.estado}</span>
-                                </div>
-                                <div class="text-left space-y-4 border-t pt-6 text-sm text-slate-600">
-                                    <p class="flex justify-between"><strong>Ingresó:</strong> <span>${new Date(data.fecha_ingreso).toLocaleDateString('es-AR')}</span></p>
-                                    <p class="flex justify-between"><strong>Ticket:</strong> <span class="font-mono">#${data.id}</span></p>
-                                    <p class="flex justify-between"><strong>Equipo:</strong> <span>${data.equipo}</span></p>
-                                    <p class="flex flex-col"><strong>Falla:</strong> <span class="text-gray-400 mt-1 italic">${data.falla}</span></p>
-                                </div>
-                                <p class="mt-8 text-[10px] text-gray-300 italic">Guardá este link para consultar cuando quieras.</p>
-                            </div>
-                        </div>`;
-                    document.body.style.visibility = 'visible';
-                    return;
-                }
+            if (sessionStorage.getItem("admin_access") !== "true") {
+                if (prompt("Contraseña:") === PASSWORD_PANEL) sessionStorage.setItem("admin_access", "true");
+                else { window.location.reload(); return; }
             }
 
-            // MODO ADMIN
-            let acceso = sessionStorage.getItem("admin_access");
-            if (acceso !== "true") {
-                let pass = prompt("Acceso restringido. Ingrese la contraseña:");
-                if (pass === PASSWORD_PANEL) {
-                    sessionStorage.setItem("admin_access", "true");
-                } else {
-                    alert("Incorrecto.");
-                    window.location.reload();
-                    return;
-                }
-            }
-
-            const { data, error } = await _supabase.from('tickets').select('*').order('id', { ascending: false });
-            if (error) { document.body.style.visibility = 'visible'; return; }
-
+            const { data } = await _supabase.from('tickets').select('*').order('id', { ascending: false });
+            
             tableBody.innerHTML = '';
-            data.forEach(ticket => {
-                const colorClase = ticket.estado === 'Listo' ? 'bg-green-100 text-green-600' : 'bg-rose-100 text-rose-600';
-                const fecha = new Date(ticket.fecha_ingreso).toLocaleString('es-AR', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'});
+            cardsBody.innerHTML = '';
+            
+            data.forEach(t => {
+                const badge = t.estado === 'Listo' ? 'bg-green-100 text-green-600' : 'bg-rose-100 text-rose-600';
+                const fecha = new Date(t.fecha_ingreso).toLocaleDateString();
+
+                // Desktop Row
                 tableBody.innerHTML += `
-                    <tr class="border-b hover:bg-slate-50/50 transition-colors">
-                        <td class="py-5 px-6 font-mono font-black text-indigo-600">#${ticket.id}</td>
-                        <td class="py-5 px-6">
-                            <div class="font-bold text-slate-800">${ticket.cliente}</div>
-                            <div class="text-[10px] text-slate-400 uppercase font-bold">${fecha} HS</div>
-                        </td>
-                        <td class="py-5 px-6 text-center">
-                            <span class="${colorClase} py-1.5 px-4 rounded-full text-[10px] font-black uppercase tracking-tighter">${ticket.estado}</span>
-                        </td>
-                        <td class="py-5 px-6 text-center flex justify-center space-x-4 text-lg">
-                            <button onclick="enviarLinkWhatsApp('${ticket.whatsapp}', ${ticket.id}, '${ticket.cliente}')" class="text-emerald-500 hover:scale-125 transition-transform" title="Enviar WhatsApp"><i class="fab fa-whatsapp"></i></button>
-                            <button onclick="mostrarQR(${ticket.id})" class="text-slate-400 hover:text-indigo-600 transition-colors" title="Ver QR"><i class="fas fa-qrcode"></i></button>
-                            <button onclick="prepararEdicion(${ticket.id},'${ticket.cliente}','${ticket.whatsapp}','${ticket.equipo}','${ticket.falla}')" class="text-blue-500 transition-colors" title="Editar"><i class="fas fa-edit"></i></button>
-                            <button onclick="finalizarTicket(${ticket.id})" class="text-green-500 transition-colors" title="Finalizar"><i class="fas fa-check-circle"></i></button>
-                            <button onclick="borrarTicket(${ticket.id})" class="text-rose-400 transition-colors" title="Borrar"><i class="fas fa-trash-alt"></i></button>
+                    <tr class="border-b">
+                        <td class="py-4 px-6 font-mono font-bold text-indigo-600">#${t.id}</td>
+                        <td class="py-4 px-6"><div class="font-bold">${t.cliente}</div><div class="text-[10px] text-slate-400">${t.equipo}</div></td>
+                        <td class="py-4 px-6 text-center"><span class="${badge} py-1 px-3 rounded-full text-[10px] font-black uppercase">${t.estado}</span></td>
+                        <td class="py-4 px-6 text-center flex justify-center space-x-4 text-xl">
+                            <button onclick="enviarLinkWhatsApp('${t.whatsapp}',${t.id},'${t.cliente}')" class="text-emerald-500"><i class="fab fa-whatsapp"></i></button>
+                            <button onclick="mostrarQR(${t.id})" class="text-slate-300"><i class="fas fa-qrcode"></i></button>
+                            <button onclick="finalizarTicket(${t.id})" class="text-green-500"><i class="fas fa-check-circle"></i></button>
+                            <button onclick="borrarTicket(${t.id})" class="text-rose-300"><i class="fas fa-trash"></i></button>
                         </td>
                     </tr>`;
+
+                // Mobile Card
+                cardsBody.innerHTML += `
+                    <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 relative">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <span class="text-[10px] font-black text-indigo-300 uppercase tracking-widest">Ticket #${t.id}</span>
+                                <h3 class="text-xl font-bold text-slate-800">${t.cliente}</h3>
+                                <p class="text-sm text-slate-500">${t.equipo}</p>
+                            </div>
+                            <span class="${badge} py-1.5 px-4 rounded-full text-[10px] font-black uppercase">${t.estado}</span>
+                        </div>
+                        <div class="grid grid-cols-4 gap-2 pt-4 border-t border-slate-50">
+                            <button onclick="enviarLinkWhatsApp('${t.whatsapp}',${t.id},'${t.cliente}')" class="bg-emerald-50 text-emerald-600 p-4 rounded-2xl text-xl"><i class="fab fa-whatsapp"></i></button>
+                            <button onclick="mostrarQR(${t.id})" class="bg-slate-50 text-slate-400 p-4 rounded-2xl text-xl"><i class="fas fa-qrcode"></i></button>
+                            <button onclick="finalizarTicket(${t.id})" class="bg-green-50 text-green-600 p-4 rounded-2xl text-xl"><i class="fas fa-check-circle"></i></button>
+                            <button onclick="borrarTicket(${t.id})" class="bg-rose-50 text-rose-400 p-4 rounded-2xl text-xl"><i class="fas fa-trash-alt"></i></button>
+                        </div>
+                    </div>`;
             });
             ticketCount.innerText = data.length;
             document.body.style.visibility = 'visible';
         }
 
-        async function finalizarTicket(id) {
-            await _supabase.from('tickets').update({ estado: 'Listo' }).eq('id', id);
-            cargarTickets();
-        }
-
-        async function borrarTicket(id) {
-            if (confirm('¿Borrar este ticket definitivamente?')) {
-                await _supabase.from('tickets').delete().eq('id', id);
-                cargarTickets();
+        async function renderCliente(id) {
+            const { data } = await _supabase.from('tickets').select('*').eq('id', id).single();
+            if (data) {
+                document.body.innerHTML = `
+                    <div class="min-h-screen bg-indigo-900 flex items-center justify-center p-4">
+                        <div class="bg-white w-full max-w-sm rounded-[2.5rem] overflow-hidden shadow-2xl">
+                            <div class="bg-indigo-600 p-8 text-center text-white">
+                                <h1 class="text-xl font-black italic tracking-tighter mb-1">TECHFIX OS</h1>
+                                <p class="text-indigo-200 text-[10px] uppercase tracking-[0.2em]">Servicio Técnico Cesar</p>
+                            </div>
+                            <div class="p-8 text-center">
+                                <div class="mb-6">
+                                    <span class="text-slate-400 text-[10px] uppercase font-bold tracking-widest">Estado del Equipo</span>
+                                    <div class="text-4xl font-black uppercase mt-2 ${data.estado === 'Listo' ? 'text-green-500' : 'text-rose-500'}">${data.estado}</div>
+                                </div>
+                                <div class="space-y-4 text-left bg-slate-50 p-6 rounded-3xl text-sm">
+                                    <div class="flex justify-between"><span class="text-slate-400">Cliente</span><span class="font-bold">${data.cliente}</span></div>
+                                    <div class="flex justify-between"><span class="text-slate-400">Equipo</span><span class="font-bold">${data.equipo}</span></div>
+                                    <div class="border-t border-slate-200 pt-4 mt-4">
+                                        <span class="text-slate-400 block mb-1">Falla Reportada</span>
+                                        <p class="font-medium text-slate-700 italic">"${data.falla}"</p>
+                                    </div>
+                                </div>
+                                <p class="text-[10px] text-slate-300 mt-8 uppercase font-bold">Ticket #${data.id} • ${new Date(data.fecha_ingreso).toLocaleDateString()}</p>
+                            </div>
+                        </div>
+                    </div>`;
+                document.body.style.visibility = 'visible';
             }
         }
 
-        function prepararEdicion(id, cliente, whatsapp, equipo, falla) {
-            editandoId = id;
-            document.getElementById('cliente').value = cliente;
-            document.getElementById('whatsapp').value = whatsapp;
-            document.getElementById('equipo').value = equipo;
-            document.getElementById('falla').value = falla;
-            submitBtn.innerText = "ACTUALIZAR TICKET";
-            submitBtn.classList.replace('bg-indigo-600', 'bg-orange-500');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        function resetBoton() {
-            submitBtn.innerText = "CREAR TICKET DE INGRESO";
-            submitBtn.classList.replace('bg-orange-500', 'bg-indigo-600');
-        }
-
+        async function finalizarTicket(id) { await _supabase.from('tickets').update({ estado: 'Listo' }).eq('id', id); cargarTickets(); }
+        async function borrarTicket(id) { if (confirm('¿Borrar ticket?')) { await _supabase.from('tickets').delete().eq('id', id); cargarTickets(); } }
+        
         function mostrarQR(id) {
             const url = window.location.origin + window.location.pathname + "?id=" + id;
             const qrContainer = document.getElementById('qr-code');
             qrContainer.innerHTML = '';
-            new QRCode(qrContainer, { 
-                text: url, 
-                width: 180, 
-                height: 180,
-                colorDark: "#312e81"
-            });
+            new QRCode(qrContainer, { text: url, width: 220, height: 220, colorDark: "#312e81" });
             document.getElementById('qr-modal').classList.replace('hidden', 'flex');
         }
 
-        function cerrarModal() {
-            document.getElementById('qr-modal').classList.replace('flex', 'hidden');
-        }
-
+        function cerrarModal() { document.getElementById('qr-modal').classList.replace('flex', 'hidden'); }
         document.addEventListener('DOMContentLoaded', cargarTickets);
     </script>
 </body>
