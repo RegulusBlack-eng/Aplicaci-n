@@ -96,140 +96,108 @@
     const submitBtn = document.getElementById('submit-btn');
     let editandoId = null;
 
-    // 1. Manejo del Formulario
+    function enviarLinkWhatsApp(telefono, idTicket, cliente) {
+        const urlTicket = window.location.origin + window.location.pathname + "?id=" + idTicket;
+        const mensaje = `Hola *${cliente}*! Soy Marcos de TechFix OS. Tu equipo ya ingresó al taller. Podés seguir el estado en tiempo real desde este link: ${urlTicket}`;
+        const linkWA = `https://wa.me/${telefono}?text=${encodeURIComponent(mensaje)}`;
+        window.open(linkWA, '_blank');
+    }
+
     repairForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        
+        const telefono = document.getElementById('whatsapp').value;
+        const nombreCliente = document.getElementById('cliente').value;
         const ticketData = {
-            cliente: document.getElementById('cliente').value,
-            whatsapp: document.getElementById('whatsapp').value,
+            cliente: nombreCliente,
+            whatsapp: telefono,
             equipo: document.getElementById('equipo').value,
             falla: document.getElementById('falla').value,
-            fecha_ingreso: new Date().toISOString() // Se guarda automáticamente
+            fecha_ingreso: new Date().toISOString()
         };
 
         if (editandoId) {
-            const { error } = await _supabase.from('tickets').update(ticketData).eq('id', editandoId);
-            if (!error) {
-                editandoId = null;
-                resetBoton();
-            }
+            await _supabase.from('tickets').update(ticketData).eq('id', editandoId);
+            editandoId = null;
+            resetBoton();
         } else {
             const { data, error } = await _supabase.from('tickets').insert([{ ...ticketData, estado: 'Pendiente' }]).select();
-            if (data) mostrarQR(data[0].id);
+            if (data) {
+                enviarLinkWhatsApp(telefono, data[0].id, nombreCliente);
+                mostrarQR(data[0].id);
+            }
         }
         repairForm.reset();
         cargarTickets();
     });
 
-    // 2. Cargar y Mostrar Tickets
     async function cargarTickets() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const clienteId = urlParams.get('id');
+        const urlParams = new URLSearchParams(window.location.search);
+        const clienteId = urlParams.get('id');
 
-    // VISTA DEL CLIENTE
-    if (clienteId) {
-        const { data } = await _supabase.from('tickets').select('*').eq('id', clienteId).single();
-        if (data) {
-            document.body.innerHTML = `
-                <div class="min-h-screen bg-indigo-700 flex items-center justify-center p-6 text-white">
-                    <div class="bg-white text-gray-800 p-8 rounded-3xl shadow-2xl max-w-sm w-full text-center border-t-8 ${data.estado === 'Listo' ? 'border-green-500' : 'border-red-500'}">
-                        <h1 class="text-2xl font-black mb-2 text-indigo-700 italic">TechFix OS</h1>
-                        <p class="text-gray-400 text-xs uppercase tracking-widest mb-6">Estado de reparación</p>
-                        <div class="py-8 px-4 rounded-2xl mb-6 ${data.estado === 'Listo' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">
-                            <span class="text-5xl font-black uppercase">${data.estado}</span>
+        if (clienteId) {
+            const { data } = await _supabase.from('tickets').select('*').eq('id', clienteId).single();
+            if (data) {
+                document.body.innerHTML = `
+                    <div class="min-h-screen bg-indigo-700 flex items-center justify-center p-6 text-white">
+                        <div class="bg-white text-gray-800 p-8 rounded-3xl shadow-2xl max-w-sm w-full text-center border-t-8 ${data.estado === 'Listo' ? 'border-green-500' : 'border-red-500'}">
+                            <h1 class="text-2xl font-black mb-2 text-indigo-700 italic">TechFix OS</h1>
+                            <p class="text-gray-400 text-xs uppercase tracking-widest mb-6">Estado de tu reparación</p>
+                            <div class="py-8 px-4 rounded-2xl mb-6 ${data.estado === 'Listo' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">
+                                <span class="text-5xl font-black uppercase">${data.estado}</span>
+                            </div>
+                            <div class="text-left space-y-4 border-t pt-6 text-sm">
+                                <p class="flex justify-between"><strong>Ingresó:</strong> <span>${new Date(data.fecha_ingreso).toLocaleDateString('es-AR')}</span></p>
+                                <p class="flex justify-between"><strong>Ticket:</strong> <span class="font-mono">#${data.id}</span></p>
+                                <p class="flex justify-between"><strong>Equipo:</strong> <span>${data.equipo}</span></p>
+                                <p class="flex flex-col"><strong>Falla:</strong> <span class="text-gray-500 mt-1">${data.falla}</span></p>
+                            </div>
+                            <p class="mt-8 text-[10px] text-gray-300 italic">Guardá este link para consultar cuando quieras.</p>
                         </div>
-                        <div class="text-left space-y-4 border-t pt-6 text-sm">
-                            <p class="flex justify-between"><strong>Ingresó:</strong> <span>${new Date(data.fecha_ingreso).toLocaleDateString('es-AR')}</span></p>
-                            <p class="flex justify-between"><strong>Ticket:</strong> <span class="font-mono">#${data.id}</span></p>
-                            <p class="flex justify-between"><strong>Equipo:</strong> <span>${data.equipo}</span></p>
-                            <p class="flex flex-col"><strong>Falla:</strong> <span class="text-gray-500 mt-1">${data.falla}</span></p>
-                        </div>
-                    </div>
-                </div>`;
-            document.body.style.visibility = 'visible';
-            return;
+                    </div>`;
+                document.body.style.visibility = 'visible';
+                return;
+            }
         }
-    }
 
-    // VISTA DEL ADMINISTRADOR (Login)
-    let acceso = sessionStorage.getItem("admin_access");
-    if (acceso !== "true") {
-        let pass = prompt("Acceso restringido. Ingrese la contraseña:");
-        if (pass === PASSWORD_PANEL) {
-            sessionStorage.setItem("admin_access", "true");
-        } else {
-            alert("Incorrecto.");
-            window.location.reload();
-            return;
+        let acceso = sessionStorage.getItem("admin_access");
+        if (acceso !== "true") {
+            let pass = prompt("Acceso restringido. Ingrese la contraseña:");
+            if (pass === PASSWORD_PANEL) {
+                sessionStorage.setItem("admin_access", "true");
+            } else {
+                alert("Incorrecto.");
+                window.location.reload();
+                return;
+            }
         }
-    }
 
-    const { data, error } = await _supabase.from('tickets').select('*').order('id', { ascending: false });
-    
-    if (error) {
-        console.error("Error de Supabase:", error);
-        document.body.style.visibility = 'visible';
-        return;
-    }
+        const { data, error } = await _supabase.from('tickets').select('*').order('id', { ascending: false });
+        if (error) { document.body.style.visibility = 'visible'; return; }
 
-    tableBody.innerHTML = '';
-    
-    if (!data || data.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="4" class="p-10 text-center text-gray-400">No hay equipos registrados</td></tr>';
-    } else {
+        tableBody.innerHTML = '';
         data.forEach(ticket => {
-            // 1. PRIMERO DEFINIMOS TODAS LAS VARIABLES
             const colorClase = ticket.estado === 'Listo' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600';
-            
-            const fechaFormateada = new Date(ticket.fecha_ingreso).toLocaleString('es-AR', {
-                day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
-            });
-
-            // 2. RECIÉN AHORA LAS USAMOS EN EL HTML
+            const fecha = new Date(ticket.fecha_ingreso).toLocaleString('es-AR', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'});
             tableBody.innerHTML += `
-                <tr class="border-b hover:bg-gray-50 transition">
+                <tr class="border-b hover:bg-gray-50">
                     <td class="py-4 px-6 font-mono font-bold text-indigo-600">#${ticket.id}</td>
                     <td class="py-4 px-6">
                         <div class="font-bold text-gray-800">${ticket.cliente}</div>
-                        <div class="text-[10px] text-gray-400 uppercase tracking-tighter">${fechaFormateada} hs</div>
-                        <div class="text-xs text-indigo-500 font-medium italic mt-1">${ticket.equipo}</div>
+                        <div class="text-[10px] text-gray-400 uppercase">${fecha} hs</div>
                     </td>
                     <td class="py-4 px-6 text-center">
-                        <span class="${colorClase} py-1 px-3 rounded-full text-xs font-black uppercase tracking-tighter">${ticket.estado}</span>
+                        <span class="${colorClase} py-1 px-3 rounded-full text-xs font-black uppercase">${ticket.estado}</span>
                     </td>
                     <td class="py-4 px-6 text-center flex justify-center space-x-3 text-lg">
-                        <button onclick="mostrarQR(${ticket.id})" class="text-gray-400 hover:text-indigo-600 transition" title="Ver QR">
-                            <i class="fas fa-qrcode"></i>
-                        </button>
-                        <button onclick="prepararEdicion(${ticket.id},'${ticket.cliente}','${ticket.whatsapp}','${ticket.equipo}','${ticket.falla}')" class="text-indigo-500 hover:text-indigo-800 transition">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button onclick="finalizarTicket(${ticket.id})" class="text-green-500 hover:text-green-800 transition">
-                            <i class="fas fa-check-circle"></i>
-                        </button>
-                        <button onclick="borrarTicket(${ticket.id})" class="text-red-400 hover:text-red-700 transition">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
+                        <button onclick="mostrarQR(${ticket.id})" class="text-gray-400 hover:text-indigo-600"><i class="fas fa-qrcode"></i></button>
+                        <button onclick="prepararEdicion(${ticket.id},'${ticket.cliente}','${ticket.whatsapp}','${ticket.equipo}','${ticket.falla}')" class="text-indigo-500"><i class="fas fa-edit"></i></button>
+                        <button onclick="finalizarTicket(${ticket.id})" class="text-green-500"><i class="fas fa-check-circle"></i></button>
+                        <button onclick="borrarTicket(${ticket.id})" class="text-red-400"><i class="fas fa-trash-alt"></i></button>
                     </td>
                 </tr>`;
         });
-    }
-    
-    ticketCount.innerText = `${data.length} Activos`;
-    // Esto hace que la página se muestre una vez que todo salió bien
-    document.body.style.visibility = 'visible';
-}
-    // 3. Funciones de Control
-    function prepararEdicion(id, cliente, whatsapp, equipo, falla) {
-        document.getElementById('cliente').value = cliente;
-        document.getElementById('whatsapp').value = whatsapp;
-        document.getElementById('equipo').value = equipo;
-        document.getElementById('falla').value = falla;
-        editandoId = id;
-        submitBtn.innerText = "GUARDAR CAMBIOS #" + id;
-        submitBtn.className = "w-full bg-indigo-600 text-white font-bold py-3 rounded-lg shadow-lg uppercase transition";
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        ticketCount.innerText = `${data.length} Activos`;
+        document.body.style.visibility = 'visible';
     }
 
     async function finalizarTicket(id) {
@@ -238,36 +206,43 @@
     }
 
     async function borrarTicket(id) {
-        if(confirm("¿Borrar este ticket?")) {
+        if (confirm('¿Borrar este ticket?')) {
             await _supabase.from('tickets').delete().eq('id', id);
             cargarTickets();
         }
     }
 
+    function prepararEdicion(id, cliente, whatsapp, equipo, falla) {
+        editandoId = id;
+        document.getElementById('cliente').value = cliente;
+        document.getElementById('whatsapp').value = whatsapp;
+        document.getElementById('equipo').value = equipo;
+        document.getElementById('falla').value = falla;
+        submitBtn.innerText = "ACTUALIZAR TICKET";
+        submitBtn.classList.replace('bg-indigo-600', 'bg-orange-500');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
     function resetBoton() {
-        submitBtn.innerText = "GENERAR TICKET Y QR";
-        submitBtn.className = "w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg shadow-lg uppercase transition duration-300";
+        submitBtn.innerText = "CREAR TICKET DE INGRESO";
+        submitBtn.classList.replace('bg-orange-500', 'bg-indigo-600');
     }
 
     function mostrarQR(id) {
-        const qrContainer = document.getElementById("qrcode");
-        qrContainer.innerHTML = ""; 
-        const link = window.location.origin + window.location.pathname + "?id=" + id;
-        new QRCode(qrContainer, {
-            text: link,
-            width: 180,
-            height: 180,
-            colorDark : "#3730a3",
-            colorLight : "#ffffff"
-        });
-        document.getElementById("qr-modal").classList.remove("hidden");
+        const url = window.location.origin + window.location.pathname + "?id=" + id;
+        const qrContainer = document.getElementById('qr-code');
+        qrContainer.innerHTML = '';
+        new QRCode(qrContainer, { text: url, width: 200, height: 200 });
+        document.getElementById('qr-modal').classList.remove('hidden');
+        document.getElementById('qr-modal').classList.add('flex');
     }
 
     function cerrarModal() {
-        document.getElementById("qr-modal").classList.add("hidden");
+        document.getElementById('qr-modal').classList.add('hidden');
+        document.getElementById('qr-modal').classList.remove('flex');
     }
 
-    cargarTickets();
-    </script>
+    document.addEventListener('DOMContentLoaded', cargarTickets);
+</script>
 </body>
 </html>
