@@ -98,7 +98,7 @@
 
     function enviarLinkWhatsApp(telefono, idTicket, cliente) {
         const urlTicket = window.location.origin + window.location.pathname + "?id=" + idTicket;
-        const mensaje = `Hola *${cliente}*! Soy Marcos de TechFix OS. Tu equipo ya ingresó al taller. Podés seguir el estado en tiempo real desde este link: ${urlTicket}`;
+        const mensaje = `Hola *${cliente}*! Soy Cesar de TechFix OS. Tu equipo ya ingresó al taller. Podés seguir el estado en tiempo real desde este link: ${urlTicket}`;
         const linkWA = `https://wa.me/${telefono}?text=${encodeURIComponent(mensaje)}`;
         window.open(linkWA, '_blank');
     }
