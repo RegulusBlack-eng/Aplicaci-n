@@ -90,7 +90,10 @@
         contenedor.innerHTML = '';
         tickets.forEach(t => {
             const esListo = t.estado === 'Listo';
-            const saldo = (parseFloat(t.presupuesto) || 0) - (parseFloat(t.sena) || 0);
+            const presupuestoNum = parseFloat(t.presupuesto) || 0;
+            const senaNum = parseFloat(t.sena) || 0;
+            const saldo = presupuestoNum - senaNum;
+            
             const linkSeguimiento = `https://tusitio.vercel.app/status.html?id=${t.id}`;
             const msgFinal = esListo 
                 ? `Hola ${t.cliente}, tu equipo ${t.equipo} ya esta listo para retirar. El saldo pendiente es de $${saldo}.` 
@@ -126,6 +129,7 @@
     async function guardarTicket() {
         const btn = document.getElementById('btn-crear');
         btn.disabled = true;
+        
         const nuevo = {
             cliente: document.getElementById('cliente').value,
             telefono: document.getElementById('telefono').value,
@@ -136,9 +140,17 @@
             notas_internas: document.getElementById('notas_internas').value,
             estado: 'Pendiente'
         };
-        const { error } = await _supabase.from('tickets').insert([nuevo]);
-        if (!error) location.reload();
-        else { alert("Error al guardar"); btn.disabled = false; }
+
+        try {
+            const { error } = await _supabase.from('tickets').insert([nuevo]);
+            if (error) throw error;
+            alert("Ticket creado con exito");
+            location.reload();
+        } catch (error) {
+            alert("Error: " + error.message);
+            console.error(error);
+            btn.disabled = false;
+        }
     }
 
     function filtrarTickets() {
