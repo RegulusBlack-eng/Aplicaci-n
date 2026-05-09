@@ -3,83 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TechFix OS - Panel de Administracion</title>
-    <link rel="icon" href="favicon.ico" type="image/x-icon">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#2563eb">
-    
+    <title>TechFix OS - Panel</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        .hidden { display: none !important; }
-    </style>
+    <style>.hidden { display: none !important; }</style>
 </head>
-<body class="bg-slate-50 pb-20 font-sans">
+<body class="bg-slate-50 pb-20">
 
-<!-- Pantalla de Login -->
 <div id="login-screen" class="fixed inset-0 bg-slate-900 z-50 flex items-center justify-center p-4">
     <div class="bg-white p-8 rounded-3xl w-full max-w-sm text-center shadow-2xl">
-        <h2 class="text-2xl font-black mb-6 text-slate-800">Acceso TechFix</h2>
+        <h2 class="text-2xl font-black mb-6">Acceso TechFix</h2>
         <input type="password" id="pass-input" placeholder="Contrasena" class="w-full p-4 bg-slate-100 rounded-2xl mb-4 text-center font-bold outline-none focus:ring-2 focus:ring-blue-500">
-        <button onclick="verificarAcceso()" class="w-full bg-blue-600 text-white font-bold py-4 rounded-2xl hover:bg-blue-700 transition-all">ENTRAR</button>
+        <button onclick="verificarAcceso()" class="w-full bg-blue-600 text-white font-bold py-4 rounded-2xl">ENTRAR</button>
         <p id="error-msg" class="text-red-500 text-xs mt-4 hidden">Contrasena incorrecta</p>
     </div>
 </div>
 
-<!-- Contenido Principal -->
 <div id="admin-content" class="hidden max-w-2xl mx-auto p-4">
     <header class="text-center py-6">
         <h1 class="text-3xl font-black text-blue-600 italic tracking-tighter">TECHFIX OS</h1>
         <p class="text-slate-500 text-xs font-bold uppercase tracking-widest">Gestion de Taller</p>
     </header>
 
-    <!-- Formulario -->
     <div class="bg-white rounded-3xl shadow-xl p-6 mb-8 border border-slate-100">
         <h3 class="text-lg font-bold text-slate-800 mb-4">Nuevo Ingreso</h3>
         <div class="space-y-3">
-            <input type="text" id="cliente" placeholder="Nombre del Cliente" class="w-full p-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-blue-500">
-            <input type="text" id="telefono" placeholder="WhatsApp (Ej: 1122334455)" class="w-full p-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-blue-500">
-            <input type="text" id="equipo" placeholder="Equipo (Ej: Samsung A51)" class="w-full p-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-blue-500">
-            <textarea id="falla" placeholder="Falla reportada" class="w-full p-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 h-20"></textarea>
+            <input type="text" id="cliente" placeholder="Nombre" class="w-full p-3 bg-slate-50 rounded-xl outline-none">
+            <input type="text" id="telefono" placeholder="WhatsApp (Ej: 1122334455)" class="w-full p-3 bg-slate-50 rounded-xl outline-none">
+            <input type="text" id="equipo" placeholder="Equipo" class="w-full p-3 bg-slate-50 rounded-xl outline-none">
+            <textarea id="falla" placeholder="Falla" class="w-full p-3 bg-slate-50 rounded-xl outline-none h-20"></textarea>
             
             <div class="grid grid-cols-2 gap-3">
-                <div class="bg-slate-50 rounded-xl p-2 border border-slate-100">
-                    <label class="text-[10px] font-bold text-slate-400 pl-1 uppercase">Presupuesto</label>
-                    <input type="number" id="presupuesto" placeholder="0" class="w-full bg-transparent p-1 font-bold text-blue-600 outline-none">
-                </div>
-                <div class="bg-slate-50 rounded-xl p-2 border border-slate-100">
-                    <label class="text-[10px] font-bold text-slate-400 pl-1 uppercase">Seña</label>
-                    <input type="number" id="sena" placeholder="0" class="w-full bg-transparent p-1 font-bold text-green-600 outline-none">
-                </div>
+                <input type="number" id="presupuesto" placeholder="Presupuesto" class="p-3 bg-slate-50 rounded-xl outline-none font-bold text-blue-600">
+                <input type="number" id="sena" placeholder="Sena" class="p-3 bg-slate-50 rounded-xl outline-none font-bold text-green-600">
             </div>
             
-            <textarea id="notas_internas" placeholder="Notas internas (Privado)" class="w-full p-3 bg-slate-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 h-16 text-sm italic"></textarea>
+            <textarea id="notas_internas" placeholder="Notas privadas" class="w-full p-3 bg-slate-100 rounded-xl outline-none h-16 text-sm italic"></textarea>
             
-            <button id="btn-crear" onclick="guardarTicket()" class="w-full bg-blue-600 text-white font-black py-4 rounded-2xl shadow-lg hover:bg-blue-700">
-                CREAR TICKET
-            </button>
+            <button id="btn-crear" onclick="guardarTicket()" class="w-full bg-blue-600 text-white font-black py-4 rounded-2xl shadow-lg">CREAR TICKET</button>
         </div>
     </div>
 
-    <!-- Buscador -->
-    <div class="sticky top-4 z-10 mb-6">
-        <input type="text" id="buscador" onkeyup="filtrarTickets()" placeholder="Buscar cliente, equipo o ID..." 
-        class="w-full p-4 bg-white/90 backdrop-blur-md rounded-2xl shadow-lg border border-blue-100 outline-none focus:ring-2 focus:ring-blue-500">
+    <div class="mb-6">
+        <input type="text" id="buscador" onkeyup="filtrarTickets()" placeholder="Buscar..." class="w-full p-4 bg-white rounded-2xl shadow-md outline-none border border-blue-100">
     </div>
 
     <div id="lista-tickets" class="space-y-4"></div>
 </div>
 
 <script>
-    // REEMPLAZA ESTOS DATOS CON LOS DE TU SUPABASE
     const SUPABASE_URL = 'https://sjgdcoxpugmxiestdwsp.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_Uu0v9l0e-RkbUTllvXoYHQ_vRvWCPj7';
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     function verificarAcceso() {
-        const pass = document.getElementById('pass-input').value;
-        if (pass === "Maguitaller") {
+        if (document.getElementById('pass-input').value === "Maguitaller") {
             document.getElementById('login-screen').classList.add('hidden');
             document.getElementById('admin-content').classList.remove('hidden');
             cargarTickets();
@@ -99,35 +77,20 @@
         tickets.forEach(t => {
             const esListo = t.estado === 'Listo';
             const saldo = (parseFloat(t.presupuesto) || 0) - (parseFloat(t.sena) || 0);
-            
-            // Link a tu pagina de estado (index.html o status.html)
-            const linkSeguimiento = `https://tusitio.vercel.app/status.html?id=${t.id}`;
-            const msgFinal = esListo 
-                ? `Hola ${t.cliente}, tu equipo ${t.equipo} ya esta listo. Saldo pendiente: $${saldo}.` 
-                : `Hola ${t.cliente}, recibimos tu ${t.equipo}. Ticket: ${t.id}. Seguimiento: ${linkSeguimiento}`;
-
             const card = document.createElement('div');
             card.className = `ticket-card bg-white p-5 rounded-3xl shadow-sm border-l-[10px] ${esListo ? 'border-green-500' : 'border-blue-400'}`;
             card.innerHTML = `
-                <div class="flex justify-between items-start mb-2">
-                    <span class="font-black text-slate-300 text-xl">ID ${t.id}</span>
-                    <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase ${esListo ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}">${t.estado}</span>
+                <div class="flex justify-between mb-2">
+                    <span class="font-black text-slate-300">ID ${t.id}</span>
+                    <span class="text-[10px] font-bold uppercase ${esListo ? 'text-green-600' : 'text-blue-600'}">${t.estado}</span>
                 </div>
-                <h4 class="font-bold text-slate-800 text-lg">${t.cliente}</h4>
-                <p class="text-slate-500 text-sm mb-3">${t.equipo}</p>
-                <div class="grid grid-cols-2 gap-2 text-[11px] mb-4">
-                    <div class="bg-slate-50 p-2 rounded-lg text-slate-400 font-bold text-center">Presupuesto: $${t.presupuesto}</div>
-                    <div class="bg-slate-50 p-2 rounded-lg text-slate-400 font-bold text-center">Saldo: $${saldo}</div>
+                <h4 class="font-bold">${t.cliente}</h4>
+                <p class="text-sm text-slate-500">${t.equipo}</p>
+                <div class="mt-2 text-xs font-bold text-slate-400 uppercase">Saldo: $${saldo}</div>
+                <div class="flex gap-2 mt-4">
+                    <button onclick="cambiarEstado(${t.id}, '${esListo ? 'Pendiente' : 'Listo'}')" class="flex-1 bg-slate-800 text-white py-2 rounded-xl text-[10px]">ESTADO</button>
+                    <button onclick="eliminarTicket(${t.id})" class="bg-rose-50 text-rose-500 px-3 rounded-xl text-xs">X</button>
                 </div>
-                ${t.notas_internas ? `<p class="text-[10px] bg-slate-100 p-2 rounded-lg text-slate-600 italic mb-4">Notas: ${t.notas_internas}</p>` : ''}
-                <div class="flex gap-2">
-                    <button onclick="cambiarEstado(${t.id}, '${esListo ? 'Pendiente' : 'Listo'}')" class="flex-1 bg-slate-800 text-white text-[10px] font-bold py-3 rounded-xl uppercase">Cambiar Estado</button>
-                    <button onclick="eliminarTicket(${t.id})" class="bg-rose-50 text-rose-500 px-4 rounded-xl font-bold text-xs uppercase">Borrar</button>
-                </div>
-                <a href="https://wa.me/${t.telefono}?text=${encodeURIComponent(msgFinal)}" target="_blank" 
-                   class="block text-center mt-2 bg-green-500 text-white font-bold py-3 rounded-xl uppercase text-xs">
-                   ${esListo ? 'Avisar Retiro' : 'Enviar Comprobante'}
-                </a>
             `;
             contenedor.appendChild(card);
         });
@@ -148,10 +111,12 @@
         };
 
         const { error } = await _supabase.from('tickets').insert([nuevo]);
-        if (!error) location.reload();
-        else { 
-            alert("Error: " + error.message); 
-            btn.disabled = false; 
+        if (error) {
+            alert("Error: " + error.message);
+            console.log(error);
+            btn.disabled = false;
+        } else {
+            location.reload();
         }
     }
 
@@ -168,7 +133,7 @@
     }
 
     async function eliminarTicket(id) {
-        if(confirm("Borrar ticket?")) {
+        if(confirm("Borrar?")) {
             await _supabase.from('tickets').delete().eq('id', id);
             cargarTickets();
         }
