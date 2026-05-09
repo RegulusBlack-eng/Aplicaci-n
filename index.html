@@ -299,6 +299,48 @@
 
         function cerrarModal() { document.getElementById('qr-modal').classList.replace('flex', 'hidden'); }
         document.addEventListener('DOMContentLoaded', cargarTickets);
+        let filtroActual = 'todos';
+
+function filtrarTickets() {
+    const busqueda = document.getElementById('buscador').value.toLowerCase();
+    
+    // Filtramos los datos que ya tenemos en memoria (ticketsDataGlobal)
+    const ticketsFiltrados = ticketsDataGlobal.filter(t => {
+        const coincideBusqueda = t.cliente.toLowerCase().includes(busqueda) || 
+                                 t.equipo.toLowerCase().includes(busqueda);
+        const coincideFiltro = filtroActual === 'todos' || t.estado === filtroActual;
+        
+        return coincideBusqueda && coincideFiltro;
+    });
+
+    // En lugar de recargar de la base de datos, volvemos a dibujar con los filtrados
+    renderizarContenido(ticketsFiltrados);
+}
+
+function cambiarFiltro(estado) {
+    filtroActual = estado;
+    
+    // Estética de botones
+    document.querySelectorAll('.filtro-btn').forEach(btn => {
+        btn.classList.remove('bg-indigo-600', 'text-white', 'shadow-md');
+        btn.classList.add('bg-white', 'text-slate-500', 'border-slate-100');
+    });
+    event.target.classList.add('bg-indigo-600', 'text-white', 'shadow-md');
+    
+    filtrarTickets();
+}
+
+// Tenés que separar la parte de "dibujar" de la parte de "cargar" para que funcione suave
+function renderizarContenido(data) {
+    tableBody.innerHTML = '';
+    cardsBody.innerHTML = '';
+    
+    data.forEach(t => {
+        // Aquí pegás todo el código que genera los TR de la tabla 
+        // y las DIV de las cards que ya tenías en tu cargarTickets()
+    });
+    ticketCount.innerText = data.length;
+}
     </script>
 </body>
 </html>
