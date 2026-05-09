@@ -65,10 +65,12 @@
 </div>
 
 <script>
+    // 1. Inicializacion inmediata de Supabase
     const SUPABASE_URL = 'TU_URL_AQUI';
     const SUPABASE_KEY = 'TU_KEY_AQUI';
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+    // 2. Control de Acceso
     function verificarAcceso() {
         const pass = document.getElementById('pass-input').value;
         if (pass === "Maguitaller") {
@@ -80,24 +82,23 @@
         }
     }
 
+    // 3. Cargar Datos
     async function cargarTickets() {
         const { data, error } = await _supabase.from('tickets').select('*').order('id', { ascending: false });
         if (!error) renderizar(data);
     }
 
+    // 4. Dibujar Interfaz
     function renderizar(tickets) {
         const contenedor = document.getElementById('lista-tickets');
         contenedor.innerHTML = '';
         tickets.forEach(t => {
             const esListo = t.estado === 'Listo';
-            const presupuestoNum = parseFloat(t.presupuesto) || 0;
-            const senaNum = parseFloat(t.sena) || 0;
-            const saldo = presupuestoNum - senaNum;
-            
+            const saldo = (parseFloat(t.presupuesto) || 0) - (parseFloat(t.sena) || 0);
             const linkSeguimiento = `https://tusitio.vercel.app/status.html?id=${t.id}`;
             const msgFinal = esListo 
-                ? `Hola ${t.cliente}, tu equipo ${t.equipo} ya esta listo para retirar. El saldo pendiente es de $${saldo}.` 
-                : `Hola ${t.cliente}, recibimos tu equipo ${t.equipo} en el taller. Ticket numero ${t.id}. Podes seguir el estado aca: ${linkSeguimiento}`;
+                ? `Hola ${t.cliente}, tu equipo ${t.equipo} ya esta listo. Saldo: $${saldo}.` 
+                : `Hola ${t.cliente}, recibimos tu equipo ${t.equipo}. Ticket ${t.id}. Seguimiento: ${linkSeguimiento}`;
 
             const card = document.createElement('div');
             card.className = `ticket-card bg-white p-5 rounded-3xl shadow-sm border-l-[10px] ${esListo ? 'border-green-500' : 'border-blue-400'}`;
@@ -109,27 +110,27 @@
                 <h4 class="font-bold text-slate-800 text-lg">${t.cliente}</h4>
                 <p class="text-slate-500 text-sm mb-3">${t.equipo}</p>
                 <div class="grid grid-cols-2 gap-2 text-[11px] mb-4">
-                    <div class="bg-slate-50 p-2 rounded-lg text-slate-400 uppercase font-bold text-center">Presupuesto: <span class="text-slate-800">$${t.presupuesto}</span></div>
-                    <div class="bg-slate-50 p-2 rounded-lg text-slate-400 uppercase font-bold text-center">Saldo: <span class="text-blue-600 font-black">$${saldo}</span></div>
+                    <div class="bg-slate-50 p-2 rounded-lg text-slate-400 font-bold text-center italic">Presupuesto: $${t.presupuesto}</div>
+                    <div class="bg-slate-50 p-2 rounded-lg text-slate-400 font-bold text-center italic">Saldo: $${saldo}</div>
                 </div>
-                ${t.notas_internas ? `<p class="text-[10px] bg-yellow-50 p-2 rounded-lg text-yellow-700 italic mb-4">Notas: ${t.notas_internas}</p>` : ''}
+                ${t.notas_internas ? `<p class="text-[10px] bg-yellow-50 p-2 rounded-lg text-yellow-700 italic mb-4 text-center border border-yellow-100">Notas: ${t.notas_internas}</p>` : ''}
                 <div class="flex gap-2">
                     <button onclick="cambiarEstado(${t.id}, '${esListo ? 'Pendiente' : 'Listo'}')" class="flex-1 bg-slate-800 text-white text-[10px] font-bold py-3 rounded-xl uppercase">Cambiar Estado</button>
                     <button onclick="eliminarTicket(${t.id})" class="bg-rose-50 text-rose-500 px-4 rounded-xl font-bold text-xs">Borrar</button>
                 </div>
                 <a href="https://wa.me/${t.telefono}?text=${encodeURIComponent(msgFinal)}" target="_blank" 
                    class="block text-center mt-2 bg-green-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-green-100 uppercase text-xs">
-                   ${esListo ? 'Notificar Retiro' : 'Enviar Ticket de Ingreso'}
+                   ${esListo ? 'Notificar Retiro' : 'Enviar Ticket Ingreso'}
                 </a>
             `;
             contenedor.appendChild(card);
         });
     }
 
+    // 5. Lógica de Guardado
     async function guardarTicket() {
         const btn = document.getElementById('btn-crear');
         btn.disabled = true;
-        
         const nuevo = {
             cliente: document.getElementById('cliente').value,
             telefono: document.getElementById('telefono').value,
@@ -141,18 +142,15 @@
             estado: 'Pendiente'
         };
 
-        try {
-            const { error } = await _supabase.from('tickets').insert([nuevo]);
-            if (error) throw error;
-            alert("Ticket creado con exito");
-            location.reload();
-        } catch (error) {
-            alert("Error: " + error.message);
-            console.error(error);
-            btn.disabled = false;
+        const { error } = await _supabase.from('tickets').insert([nuevo]);
+        if (!error) location.reload();
+        else { 
+            alert("Error: " + error.message); 
+            btn.disabled = false; 
         }
     }
 
+    // 6. Funciones Auxiliares
     function filtrarTickets() {
         const q = document.getElementById('buscador').value.toLowerCase();
         document.querySelectorAll('.ticket-card').forEach(c => {
