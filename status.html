@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estado de mi Reparación</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-blue-900 min-h-screen flex items-center justify-center p-4">
+    <div id="app" class="w-full max-w-sm">
+        <!-- Se carga dinámicamente -->
+    </div>
+
+<script>
+    const SUPABASE_URL = 'TU_URL';
+    const SUPABASE_KEY = 'TU_KEY';
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    async function cargarEstado() {
+        const params = new URLSearchParams(window.location.search);
+        const id = params.get('id');
+        
+        if (!id) { window.location.href = '404.html'; return; }
+
+        const { data, error } = await supabase.from('tickets').select('*').eq('id', id).single();
+        
+        if (error || !data) { window.location.href = '404.html'; return; }
+
+        const saldo = (parseFloat(data.presupuesto) || 0) - (parseFloat(data.sena) || 0);
+        const esListo = data.estado === 'Listo';
+
+        document.getElementById('app').innerHTML = `
+            <div class="bg-white rounded-[3rem] overflow-hidden shadow-2xl animate-bottom">
+                <div class="bg-blue-600 p-8 text-center text-white">
+                    <h1 class="text-2xl font-black italic tracking-tighter">TECHFIX OS</h1>
+                    <p class="text-blue-200 text-[10px] uppercase tracking-widest mt-1">Seguimiento Online</p>
+                </div>
+                
+                <div class="p-8">
+                    <div class="text-center mb-8">
+                        <span class="text-slate-400 text-[10px] uppercase font-bold tracking-widest">Tu equipo está</span>
+                        <div class="text-5xl font-black uppercase mt-2 ${esListo ? 'text-green-500' : 'text-blue-600'}">
+                            ${data.estado}
+                        </div>
+                    </div>
+
+                    <div class="space-y-3 bg-slate-50 p-6 rounded-[2rem] border border-slate-100">
+                        <div class="flex justify-between text-sm">
+                            <span class="text-slate-400">Equipo</span>
+                            <span class="font-bold text-slate-800">${data.equipo}</span>
+                        </div>
+                        <div class="flex justify-between text-sm border-t border-slate-200 pt-2">
+                            <span class="text-slate-400">Presupuesto</span>
+                            <span class="font-bold text-slate-800">$${data.presupuesto}</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-slate-400">Seña</span>
+                            <span class="font-bold text-green-600">-$${data.sena}</span>
+                        </div>
+                        <div class="flex justify-between border-t-2 border-dashed border-slate-300 pt-3">
+                            <span class="font-black text-slate-800">SALDO TOTAL</span>
+                            <span class="font-black text-blue-600 text-xl">$${saldo}</span>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 text-center">
+                        <p class="text-[10px] text-slate-300 font-bold uppercase">Ticket #${data.id}</p>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    cargarEstado();
+</script>
+</body>
+</html>
