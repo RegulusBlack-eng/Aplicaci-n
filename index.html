@@ -3,125 +3,125 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TechFix OS - Panel de Control</title>
-    <!-- Favicon (Paso 5) -->
+    <title>TechFix OS - Panel Admin</title>
     <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <!-- Meta tags para modo App -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#2563eb">
+    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        :root { --primary: #2563eb; --success: #16a34a; --bg: #f8fafc; }
-        body { font-family: system-ui, sans-serif; background: var(--bg); padding: 20px; margin: 0; }
-        .container { max-width: 900px; margin: auto; }
-        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); margin-bottom: 20px; }
-        input, textarea, select { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; }
-        button { background: var(--primary); color: white; border: none; padding: 12px 20px; border-radius: 6px; cursor: pointer; font-weight: 600; width: 100%; }
-        button.btn-wa { background: #25d366; margin-top: 10px; }
-        
-        /* Buscador */
-        #buscador { font-size: 16px; border: 2px solid var(--primary); }
-
-        /* Lista de Tickets */
-        .ticket-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px; }
-        .ticket-card { background: white; border-left: 5px solid #cbd5e1; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgb(0 0 0 / 0.05); }
-        .ticket-card.listo { border-left-color: var(--success); }
-        .status-badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; text-transform: uppercase; }
-        .badge-pendiente { background: #fee2e2; color: #991b1b; }
-        .badge-listo { background: #dcfce7; color: #166534; }
-        .notas-privadas { font-size: 12px; color: #64748b; font-style: italic; background: #f1f5f9; padding: 5px; margin-top: 10px; }
-    </style>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
+<body class="bg-slate-50 pb-20">
 
-<div class="container">
-    <h2 style="text-align: center;">🛠️ TechFix OS</h2>
+<div class="max-w-2xl mx-auto p-4">
+    <header class="text-center py-6">
+        <h1 class="text-3xl font-black text-blue-600 italic tracking-tighter">TECHFIX OS</h1>
+        <p class="text-slate-500 text-xs font-bold uppercase tracking-widest">Gestión de Taller</p>
+    </header>
 
     <!-- Formulario de Ingreso -->
-    <div class="card">
-        <h3>Nuevo Ingreso</h3>
-        <input type="text" id="cliente" placeholder="Nombre del Cliente">
-        <input type="text" id="telefono" placeholder="WhatsApp (Ej: 1122334455)">
-        <input type="text" id="equipo" placeholder="Equipo (Ej: Notebook HP G7)">
-        <textarea id="falla" placeholder="Falla reportada"></textarea>
-        
-        <div style="display: flex; gap: 10px;">
-            <input type="text" id="presupuesto" placeholder="Presupuesto $">
-            <input type="text" id="sena" placeholder="Seña $">
+    <div class="bg-white rounded-[2rem] shadow-xl p-6 mb-8 border border-slate-100">
+        <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+            <span>✨ Nuevo Ingreso</span>
+        </h3>
+        <div class="space-y-3">
+            <input type="text" id="cliente" placeholder="Nombre del Cliente" class="w-full p-3 bg-slate-50 rounded-xl border-none focus:ring-2 focus:ring-blue-500">
+            <input type="text" id="telefono" placeholder="WhatsApp (Ej: 1122334455)" class="w-full p-3 bg-slate-50 rounded-xl border-none focus:ring-2 focus:ring-blue-500">
+            <input type="text" id="equipo" placeholder="Equipo (Ej: Samsung A51)" class="w-full p-3 bg-slate-50 rounded-xl border-none focus:ring-2 focus:ring-blue-500">
+            <textarea id="falla" placeholder="Falla reportada" class="w-full p-3 bg-slate-50 rounded-xl border-none focus:ring-2 focus:ring-blue-500 h-20"></textarea>
+            
+            <div class="grid grid-cols-2 gap-3">
+                <div class="bg-slate-50 rounded-xl p-2">
+                    <label class="text-[10px] font-bold text-slate-400 pl-1 uppercase">Presupuesto $</label>
+                    <input type="text" id="presupuesto" placeholder="0.00" class="w-full bg-transparent border-none focus:ring-0 p-1 font-bold text-blue-600">
+                </div>
+                <div class="bg-slate-50 rounded-xl p-2">
+                    <label class="text-[10px] font-bold text-slate-400 pl-1 uppercase">Seña $</label>
+                    <input type="text" id="sena" placeholder="0.00" class="w-full bg-transparent border-none focus:ring-0 p-1 font-bold text-green-600">
+                </div>
+            </div>
+            
+            <textarea id="notas_internas" placeholder="Notas internas (Privado)" class="w-full p-3 bg-slate-100 rounded-xl border-none focus:ring-2 focus:ring-blue-500 h-16 text-sm italic"></textarea>
+            
+            <button onclick="guardarTicket()" class="w-full bg-blue-600 text-white font-black py-4 rounded-2xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-200">
+                CREAR TICKET #
+            </button>
         </div>
-        
-        <textarea id="notas_internas" placeholder="Notas internas (solo para el taller)"></textarea>
-        
-        <button onclick="guardarTicket()">Crear Ticket</button>
     </div>
 
-    <!-- Buscador en tiempo real -->
-    <input type="text" id="buscador" placeholder="🔍 Buscar por cliente, equipo o ID..." onkeyup="filtrarTickets()">
+    <!-- Buscador -->
+    <div class="sticky top-4 z-10 mb-6">
+        <input type="text" id="buscador" onkeyup="filtrarTickets()" placeholder="🔍 Buscar cliente, equipo o ID..." 
+        class="w-full p-4 bg-white/80 backdrop-blur-md rounded-2xl shadow-lg border border-blue-100 focus:ring-2 focus:ring-blue-500 outline-none">
+    </div>
 
-    <!-- Listado de Tickets -->
-    <div id="lista-tickets" class="ticket-grid">
-        <!-- Los tickets se cargan aquí -->
+    <!-- Lista de Tickets -->
+    <div id="lista-tickets" class="space-y-4">
+        <!-- Cargando... -->
     </div>
 </div>
 
 <script>
-    // CONFIGURACIÓN SUPABASE
-    const SUPABASE_URL = 'TU_URL_DE_SUPABASE';
-    const SUPABASE_KEY = 'TU_KEY_DE_SUPABASE';
+    const SUPABASE_URL = 'TU_URL';
+    const SUPABASE_KEY = 'TU_KEY';
     const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // 1. CARGAR TICKETS
     async function cargarTickets() {
-        const { data, error } = await supabase
-            .from('tickets')
-            .select('*')
-            .order('id', { ascending: false });
-
-        if (error) return console.error(error);
-        renderizarTickets(data);
+        const { data, error } = await supabase.from('tickets').select('*').order('id', { ascending: false });
+        if (!error) renderizar(data);
     }
 
-    // 2. RENDERIZAR TICKETS CON LÓGICA DE WHATSAPP
-    function renderizarTickets(tickets) {
+    function renderizar(tickets) {
         const contenedor = document.getElementById('lista-tickets');
         contenedor.innerHTML = '';
 
         tickets.forEach(t => {
             const esListo = t.estado === 'Listo';
-            const card = document.createElement('div');
-            card.className = `ticket-card ${esListo ? 'listo' : ''}`;
+            const saldo = (parseFloat(t.presupuesto) || 0) - (parseFloat(t.sena) || 0);
             
-            // Lógica de mensaje de WhatsApp
-            const msgIngreso = `Hola ${t.cliente}, tu ${t.equipo} ingresó al taller. Ticket #${t.id}. Seguimiento: https://tuweb.com/status?id=${t.id}`;
-            const msgListo = `¡Hola ${t.cliente}! Tu ${t.equipo} ya está listo para retirar. Saldo pendiente: $${t.presupuesto - t.sena}.`;
-            
-            const mensajeFinal = esListo ? msgListo : msgIngreso;
+            // Link de seguimiento real (reemplazar con tu URL de Vercel)
+            const linkSeguimiento = `https://tusitio.vercel.app/status.html?id=${t.id}`;
+            const msgFinal = esListo 
+                ? `¡Hola ${t.cliente}! Tu ${t.equipo} ya está listo. Saldo: $${saldo}.` 
+                : `Hola ${t.cliente}, recibimos tu ${t.equipo}. Ticket #${t.id}. Seguimiento: ${linkSeguimiento}`;
 
+            const card = document.createElement('div');
+            card.className = `ticket-card bg-white p-5 rounded-3xl shadow-sm border-l-[10px] ${esListo ? 'border-green-500' : 'border-blue-400'}`;
             card.innerHTML = `
-                <div style="display:flex; justify-content: space-between;">
-                    <strong>#${t.id}</strong>
-                    <span class="status-badge ${esListo ? 'badge-listo' : 'badge-pendiente'}">${t.estado}</span>
+                <div class="flex justify-between items-start mb-2">
+                    <span class="font-black text-slate-300 text-xl">#${t.id}</span>
+                    <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase ${esListo ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}">${t.estado}</span>
                 </div>
-                <p><strong>${t.cliente}</strong> - ${t.equipo}</p>
-                <p><small>${t.falla}</small></p>
-                <p>💰 Presupuesto: $${t.presupuesto} | Seña: $${t.sena}</p>
-                ${t.notas_internas ? `<div class="notas-privadas">👁️ Notas: ${t.notas_internas}</div>` : ''}
+                <h4 class="font-bold text-slate-800 text-lg">${t.cliente}</h4>
+                <p class="text-slate-500 text-sm mb-3">${t.equipo}</p>
                 
-                <div style="display: flex; gap: 5px; margin-top: 10px;">
-                    <button onclick="cambiarEstado(${t.id}, '${esListo ? 'Pendiente' : 'Listo'}')" style="background:#64748b; font-size:12px;">
-                        Marcar como ${esListo ? 'Pendiente' : 'Listo'}
-                    </button>
-                    <button onclick="eliminarTicket(${t.id})" style="background:#ef4444; width: 40px;">🗑️</button>
+                <div class="grid grid-cols-2 gap-2 text-[11px] mb-4">
+                    <div class="bg-slate-50 p-2 rounded-lg text-slate-400 uppercase font-bold text-center">Presu: <span class="text-slate-800">$${t.presupuesto}</span></div>
+                    <div class="bg-slate-50 p-2 rounded-lg text-slate-400 uppercase font-bold text-center">Saldo: <span class="text-blue-600 font-black">$${saldo}</span></div>
+                </div>
+
+                ${t.notas_internas ? `<p class="text-[10px] bg-yellow-50 p-2 rounded-lg text-yellow-700 italic mb-4">📝 ${t.notas_internas}</p>` : ''}
+
+                <div class="flex gap-2">
+                    <button onclick="cambiarEstado(${t.id}, '${esListo ? 'Pendiente' : 'Listo'}')" class="flex-1 bg-slate-800 text-white text-[10px] font-bold py-3 rounded-xl uppercase">Cambiar Estado</button>
+                    <button onclick="eliminarTicket(${t.id})" class="bg-rose-50 text-rose-500 px-4 rounded-xl">🗑️</button>
                 </div>
                 
-                <button class="btn-wa" onclick="window.open('https://wa.me/${t.telefono}?text=${encodeURIComponent(mensajeFinal)}')">
-                    ${esListo ? '📲 Avisar que está LISTO' : '📲 Enviar Ticket Ingreso'}
-                </button>
+                <a href="https://wa.me/${t.telefono}?text=${encodeURIComponent(msgFinal)}" target="_blank" 
+                   class="block text-center mt-2 bg-green-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-green-100">
+                   ${esListo ? '📲 AVISAR LISTO' : '📲 ENVIAR TICKET'}
+                </a>
             `;
             contenedor.appendChild(card);
         });
     }
 
-    // 3. GUARDAR TICKET (CON NUEVOS CAMPOS)
     async function guardarTicket() {
-        const nuevoTicket = {
+        const btn = event.target;
+        btn.disabled = true;
+        const nuevo = {
             cliente: document.getElementById('cliente').value,
             telefono: document.getElementById('telefono').value,
             equipo: document.getElementById('equipo').value,
@@ -131,43 +131,31 @@
             notas_internas: document.getElementById('notas_internas').value,
             estado: 'Pendiente'
         };
-
-        const { error } = await supabase.from('tickets').insert([nuevoTicket]);
-        if (error) alert("Error al guardar");
-        else {
-            alert("Ticket creado con éxito");
-            location.reload();
-        }
+        const { error } = await supabase.from('tickets').insert([nuevo]);
+        if (!error) location.reload();
+        else { alert("Error"); btn.disabled = false; }
     }
 
-    // 4. FILTRAR TICKETS (BUSCADOR)
     function filtrarTickets() {
-        const busqueda = document.getElementById('buscador').value.toLowerCase();
-        const cards = document.querySelectorAll('.ticket-card');
-
-        cards.forEach(card => {
-            const texto = card.innerText.toLowerCase();
-            card.style.display = texto.includes(busqueda) ? '' : 'none';
+        const q = document.getElementById('buscador').value.toLowerCase();
+        document.querySelectorAll('.ticket-card').forEach(c => {
+            c.style.display = c.innerText.toLowerCase().includes(q) ? '' : 'none';
         });
     }
 
-    // 5. CAMBIAR ESTADO
-    async function cambiarEstado(id, nuevoEstado) {
-        const { error } = await supabase.from('tickets').update({ estado: nuevoEstado }).eq('id', id);
-        if (!error) cargarTickets();
+    async function cambiarEstado(id, est) {
+        await supabase.from('tickets').update({ estado: est }).eq('id', id);
+        cargarTickets();
     }
 
-    // 6. ELIMINAR
     async function eliminarTicket(id) {
-        if(confirm("¿Seguro que querés borrar este ticket?")) {
+        if(confirm("¿Borrar ticket?")) {
             await supabase.from('tickets').delete().eq('id', id);
             cargarTickets();
         }
     }
 
-    // Carga inicial
     cargarTickets();
 </script>
-
 </body>
 </html>
