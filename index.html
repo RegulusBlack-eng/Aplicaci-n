@@ -14,7 +14,6 @@
 </head>
 <body class="bg-slate-50 pb-20">
 
-<!-- Pantalla de Login -->
 <div id="login-screen" class="fixed inset-0 bg-slate-900 z-50 flex items-center justify-center p-4">
     <div class="bg-white p-8 rounded-3xl w-full max-w-sm text-center shadow-2xl">
         <h2 class="text-2xl font-black mb-6 text-slate-800">Acceso TechFix</h2>
@@ -24,14 +23,12 @@
     </div>
 </div>
 
-<!-- Contenido Principal (Oculto hasta loguearse) -->
 <div id="admin-content" class="hidden max-w-2xl mx-auto p-4">
     <header class="text-center py-6">
         <h1 class="text-3xl font-black text-blue-600 italic tracking-tighter">TECHFIX OS</h1>
         <p class="text-slate-500 text-xs font-bold uppercase tracking-widest">Gestion de Taller</p>
     </header>
 
-    <!-- Formulario de Ingreso -->
     <div class="bg-white rounded-3xl shadow-xl p-6 mb-8 border border-slate-100">
         <h3 class="text-lg font-bold text-slate-800 mb-4">Nuevo Ingreso</h3>
         <div class="space-y-3">
@@ -59,31 +56,23 @@
         </div>
     </div>
 
-    <!-- Buscador -->
     <div class="sticky top-4 z-10 mb-6">
         <input type="text" id="buscador" onkeyup="filtrarTickets()" placeholder="Buscar cliente, equipo o ID..." 
         class="w-full p-4 bg-white/90 backdrop-blur-md rounded-2xl shadow-lg border border-blue-100 focus:ring-2 focus:ring-blue-500 outline-none">
     </div>
 
-    <!-- Lista de Tickets -->
-    <div id="lista-tickets" class="space-y-4">
-        <!-- Los datos se cargan aqui -->
-    </div>
+    <div id="lista-tickets" class="space-y-4"></div>
 </div>
 
 <script>
-    // Configuracion de Supabase
     const SUPABASE_URL = 'TU_URL_AQUI';
     const SUPABASE_KEY = 'TU_KEY_AQUI';
-    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // Funcion de Acceso
     function verificarAcceso() {
         const pass = document.getElementById('pass-input').value;
-        const claveCorrecta = "Maguitaller"; // Cambia esta clave por la que desees
-
-        if (pass === claveCorrecta) {
-            document.getElementById('login-screen').classList.add('hidden');
+        if (pass === "Maguitaller") {
+            document.getElementById('login-screen').style.display = 'none';
             document.getElementById('admin-content').classList.remove('hidden');
             cargarTickets();
         } else {
@@ -92,18 +81,16 @@
     }
 
     async function cargarTickets() {
-        const { data, error } = await supabase.from('tickets').select('*').order('id', { ascending: false });
+        const { data, error } = await _supabase.from('tickets').select('*').order('id', { ascending: false });
         if (!error) renderizar(data);
     }
 
     function renderizar(tickets) {
         const contenedor = document.getElementById('lista-tickets');
         contenedor.innerHTML = '';
-
         tickets.forEach(t => {
             const esListo = t.estado === 'Listo';
             const saldo = (parseFloat(t.presupuesto) || 0) - (parseFloat(t.sena) || 0);
-            
             const linkSeguimiento = `https://tusitio.vercel.app/status.html?id=${t.id}`;
             const msgFinal = esListo 
                 ? `Hola ${t.cliente}, tu equipo ${t.equipo} ya esta listo para retirar. El saldo pendiente es de $${saldo}.` 
@@ -118,19 +105,15 @@
                 </div>
                 <h4 class="font-bold text-slate-800 text-lg">${t.cliente}</h4>
                 <p class="text-slate-500 text-sm mb-3">${t.equipo}</p>
-                
                 <div class="grid grid-cols-2 gap-2 text-[11px] mb-4">
                     <div class="bg-slate-50 p-2 rounded-lg text-slate-400 uppercase font-bold text-center">Presupuesto: <span class="text-slate-800">$${t.presupuesto}</span></div>
                     <div class="bg-slate-50 p-2 rounded-lg text-slate-400 uppercase font-bold text-center">Saldo: <span class="text-blue-600 font-black">$${saldo}</span></div>
                 </div>
-
                 ${t.notas_internas ? `<p class="text-[10px] bg-yellow-50 p-2 rounded-lg text-yellow-700 italic mb-4">Notas: ${t.notas_internas}</p>` : ''}
-
                 <div class="flex gap-2">
                     <button onclick="cambiarEstado(${t.id}, '${esListo ? 'Pendiente' : 'Listo'}')" class="flex-1 bg-slate-800 text-white text-[10px] font-bold py-3 rounded-xl uppercase">Cambiar Estado</button>
                     <button onclick="eliminarTicket(${t.id})" class="bg-rose-50 text-rose-500 px-4 rounded-xl font-bold text-xs">Borrar</button>
                 </div>
-                
                 <a href="https://wa.me/${t.telefono}?text=${encodeURIComponent(msgFinal)}" target="_blank" 
                    class="block text-center mt-2 bg-green-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-green-100 uppercase text-xs">
                    ${esListo ? 'Notificar Retiro' : 'Enviar Ticket de Ingreso'}
@@ -153,7 +136,7 @@
             notas_internas: document.getElementById('notas_internas').value,
             estado: 'Pendiente'
         };
-        const { error } = await supabase.from('tickets').insert([nuevo]);
+        const { error } = await _supabase.from('tickets').insert([nuevo]);
         if (!error) location.reload();
         else { alert("Error al guardar"); btn.disabled = false; }
     }
@@ -166,13 +149,13 @@
     }
 
     async function cambiarEstado(id, est) {
-        await supabase.from('tickets').update({ estado: est }).eq('id', id);
+        await _supabase.from('tickets').update({ estado: est }).eq('id', id);
         cargarTickets();
     }
 
     async function eliminarTicket(id) {
         if(confirm("Desea eliminar este ticket?")) {
-            await supabase.from('tickets').delete().eq('id', id);
+            await _supabase.from('tickets').delete().eq('id', id);
             cargarTickets();
         }
     }
