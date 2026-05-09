@@ -120,7 +120,7 @@
             if (!t) return;
             const saldo = (parseFloat(t.presupuesto) || 0) - (parseFloat(t.sena) || 0);
             const urlTicket = window.location.origin + window.location.pathname + "?id=" + id;
-            const mensaje = `¡Hola *${t.cliente}*! 👋 Te informo que tu *${t.equipo}* ya está listo para retirar en TechFix OS.\n\n💰 *Saldo a abonar:* $${saldo}\n\nPodés ver los detalles aquí: ${urlTicket}\n¡Te esperamos!`;
+            const mensaje = `¡Hola *${t.cliente}*! Te informo que tu *${t.equipo}* ya está listo para retirar en el Taller Cesar.\n\n *Saldo a abonar:* $${saldo}\n\nPodés ver los detalles aquí: ${urlTicket}\n¡Te esperamos!`;
             window.open(`https://wa.me/${t.whatsapp}?text=${encodeURIComponent(mensaje)}`, '_blank');
         }
 
