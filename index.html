@@ -8,9 +8,11 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
     <style>
         body { visibility: hidden; }
         .custom-scroll { -webkit-overflow-scrolling: touch; }
+        .excel-cell:focus { background-color: #f8fafc; outline: 2px solid #6366f1; border-radius: 4px; }
     </style>
 </head>
 <body class="bg-slate-50 font-sans text-slate-900">
@@ -78,11 +80,67 @@
             <div id="cards-body" class="md:hidden space-y-4"></div>
         </div>
 
+        <section class="bg-white p-6 md:p-8 rounded-3xl shadow-xl border border-slate-100 mb-8">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
+                <div>
+                    <h2 class="text-xl font-black text-indigo-950 uppercase tracking-tight">Inventario de Repuestos (TVs y Placas)</h2>
+                    <p class="text-xs text-slate-400 font-medium">Hacé doble clic en cualquier celda para editar como en Excel</p>
+                </div>
+                <div class="flex gap-2 w-full md:w-auto">
+                    <button onclick="encenderCamaraOCR()" class="flex-1 md:flex-none bg-indigo-600 text-white px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-indigo-700 transition">
+                        <i class="fas fa-camera text-sm"></i> Escanear Código Texto
+                    </button>
+                    <button onclick="agregarFilaExcel()" class="bg-slate-100 text-slate-700 px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-slate-200 transition">
+                        + Nueva Fila
+                    </button>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto border border-slate-100 rounded-2xl">
+                <table class="w-full text-left border-collapse min-w-[600px]">
+                    <thead class="bg-slate-50 text-[10px] uppercase font-black text-slate-400 tracking-widest border-b border-slate-100">
+                        <tr>
+                            <th class="py-3 px-4 border-r border-slate-100">Código / Modelo Texto</th>
+                            <th class="py-3 px-4 border-r border-slate-100">Descripción / Componente</th>
+                            <th class="py-3 px-4 border-r border-slate-100">Ubicación Estante</th>
+                            <th class="py-3 px-4 text-center w-16">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="excel-body" class="divide-y divide-slate-100 text-sm">
+                        </tbody>
+                </table>
+            </div>
+        </section>
+
         <div class="flex justify-center md:justify-end">
             <button onclick="exportarCSV()" class="flex items-center gap-2 text-slate-400 hover:text-indigo-600 transition-colors font-bold text-xs uppercase tracking-widest p-4">
                 <i class="fas fa-file-csv text-lg"></i>
                 Descargar Respaldo (CSV)
             </button>
+        </div>
+    </div>
+
+    <div id="ocr-modal" class="fixed inset-0 bg-slate-900/90 backdrop-blur-md hidden flex-col items-center justify-center z-50 p-4">
+        <div class="bg-white p-6 rounded-[2rem] shadow-2xl max-w-md w-full relative">
+            <h3 class="text-lg font-black text-slate-900 mb-1 text-indigo-700 uppercase tracking-tight">Escáner de Texto de Placas</h3>
+            <p class="text-xs text-slate-400 mb-4">Centrá bien el texto del modelo y presioná "Capturar y Leer"</p>
+            
+            <div class="relative overflow-hidden rounded-2xl bg-black aspect-video mb-4 border border-slate-100">
+                <video id="video-ocr" class="w-full h-full object-cover" autoplay playsinline></video>
+                <div class="absolute inset-x-6 top-1/2 -translate-y-1/2 h-10 border-2 border-dashed border-indigo-500 rounded bg-indigo-500/10 pointer-events-none"></div>
+            </div>
+
+            <canvas id="canvas-ocr" class="hidden"></canvas>
+            <div id="ocr-status" class="text-xs font-bold text-center text-slate-500 mb-4 h-4 italic"></div>
+
+            <div class="flex gap-2">
+                <button id="btn-capturar-ocr" onclick="capturarYProcesarOCR()" class="flex-1 bg-indigo-600 text-white py-3.5 rounded-xl font-black uppercase tracking-wider text-xs hover:bg-indigo-700 transition">
+                    Capturar y Leer
+                </button>
+                <button onclick="cerrarCamaraOCR()" class="bg-slate-100 text-slate-600 px-6 py-3.5 rounded-xl font-bold uppercase text-xs hover:bg-slate-200 transition">
+                    Cancelar
+                </button>
+            </div>
         </div>
     </div>
 
@@ -103,11 +161,14 @@
         const repairForm = document.getElementById('repair-form');
         const tableBody = document.getElementById('table-body');
         const cardsBody = document.getElementById('cards-body');
+        const excelBody = document.getElementById('excel-body');
         const ticketCount = document.getElementById('ticket-count');
         const submitBtn = document.getElementById('submit-btn');
         let editandoId = null;
         let ticketsDataGlobal = [];
+        let repuestosDataGlobal = [];
         let filtroActual = 'todos';
+        let streamCamara = null;
 
         function enviarLinkWhatsApp(telefono, idTicket, cliente) {
             const urlTicket = window.location.origin + window.location.pathname + "?id=" + idTicket;
@@ -120,7 +181,7 @@
             if (!t) return;
             const saldo = (parseFloat(t.presupuesto) || 0) - (parseFloat(t.sena) || 0);
             const urlTicket = window.location.origin + window.location.pathname + "?id=" + id;
-            const mensaje = `¡Hola *${t.cliente}*! Te informo que tu *${t.equipo}* ya está listo para retirar en el Taller Cesar.\n\n *Saldo a abonar:* $${saldo}\n\nPodés ver los detalles aquí: ${urlTicket}\n¡Te esperamos!`;
+            const mensaje = `¡Hola *${t.cliente}*! 👋 Te informo que tu *${t.equipo}* ya está listo para retirar en TechFix OS.\n\n💰 *Saldo a abonar:* $${saldo}\n\nPodés ver los detalles aquí: ${urlTicket}\n¡Te esperamos!`;
             window.open(`https://wa.me/${t.whatsapp}?text=${encodeURIComponent(mensaje)}`, '_blank');
         }
 
@@ -161,6 +222,7 @@
             const { data } = await _supabase.from('tickets').select('*').order('id', { ascending: false });
             ticketsDataGlobal = data || [];
             filtrarTickets();
+            cargarRepuestos();
             document.body.style.visibility = 'visible';
         }
 
@@ -251,6 +313,107 @@
             });
             event.target.classList.add('bg-indigo-600', 'text-white', 'shadow-md');
             filtrarTickets();
+        }
+
+        // --- LÓGICA DEL EXCEL EDITABLE DE REPUESTOS ---
+        async function cargarRepuestos() {
+            const { data } = await _supabase.from('repuestos').select('*').order('id', { ascending: true });
+            repuestosDataGlobal = data || [];
+            excelBody.innerHTML = '';
+            repuestosDataGlobal.forEach(r => dibujarFilaExcel(r));
+        }
+
+        function dibujarFilaExcel(r) {
+            excelBody.innerHTML += `
+                <tr id="row-repuesto-${r.id}">
+                    <td contenteditable="true" onblur="guardarCeldaExcel(${r.id}, 'codigo_texto', this.innerText)" class="excel-cell py-3 px-4 font-mono font-bold text-slate-800 border-r border-slate-100">${r.codigo_texto || ''}</td>
+                    <td contenteditable="true" onblur="guardarCeldaExcel(${r.id}, 'descripcion', this.innerText)" class="excel-cell py-3 px-4 text-slate-600 border-r border-slate-100">${r.descripcion || ''}</td>
+                    <td contenteditable="true" onblur="guardarCeldaExcel(${r.id}, 'ubicacion', this.innerText)" class="excel-cell py-3 px-4 text-slate-600 border-r border-slate-100">${r.ubicacion || ''}</td>
+                    <td class="py-3 px-4 text-center">
+                        <button onclick="borrarFilaExcel(${r.id})" class="text-rose-300 hover:text-rose-500 transition"><i class="fas fa-trash-alt"></i></button>
+                    </td>
+                </tr>`;
+        }
+
+        async function agregarFilaExcel(codigoDefecto = '') {
+            const nuevaFila = { codigo_texto: codigoDefecto, descripcion: '', ubicacion: '' };
+            const { data } = await _supabase.from('repuestos').insert([nuevaFila]).select().single();
+            if (data) dibujarFilaExcel(data);
+        }
+
+        async function guardarCeldaExcel(id, campo, valor) {
+            const dataActualizar = {};
+            dataActualizar[campo] = valor.trim();
+            await _supabase.from('repuestos').update(dataActualizar).eq('id', id);
+        }
+
+        async function borrarFilaExcel(id) {
+            if (confirm('¿Eliminar este repuesto del inventario?')) {
+                await _supabase.from('repuestos').delete().eq('id', id);
+                document.getElementById(`row-repuesto-${id}`).remove();
+            }
+        }
+
+        // --- LÓGICA DE LA CÁMARA LECTORA DE TEXTO (OCR) ---
+        async function encenderCamaraOCR() {
+            document.getElementById('ocr-status').innerText = "";
+            document.getElementById('ocr-modal').classList.replace('hidden', 'flex');
+            try {
+                streamCamara = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } }
+                });
+                document.getElementById('video-ocr').srcObject = streamCamara;
+            } catch (err) {
+                alert("No se pudo acceder a la cámara trasera.");
+                cerrarCamaraOCR();
+            }
+        }
+
+        function cerrarCamaraOCR() {
+            if (streamCamara) {
+                streamCamara.getTracks().forEach(track => track.stop());
+            }
+            document.getElementById('ocr-modal').classList.replace('flex', 'hidden');
+        }
+
+        async function capturarYProcesarOCR() {
+            const video = document.getElementById('video-ocr');
+            const canvas = document.getElementById('canvas-ocr');
+            const status = document.getElementById('ocr-status');
+            const btn = document.getElementById('btn-capturar-ocr');
+
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            btn.disabled = true;
+            status.innerText = "Procesando y leyendo texto (OCR)...";
+
+            try {
+                // Pasamos la captura a Tesseract para extraer caracteres exactos
+                const result = await Tesseract.recognize(canvas.toDataURL('image/jpeg'), 'eng+spa', {
+                    logger: m => { if(m.status === 'recognizing text') status.innerText = `Leyendo: ${Math.round(m.progress * 100)}%`; }
+                });
+
+                // Limpiamos espacios innecesarios o caracteres extraños del escaneo
+                const textoDetectado = result.data.text.trim().replace(/[^a-zA-Z0-9\-\s\/]/g, "");
+
+                if (textoDetectado.length > 2) {
+                    status.innerText = "¡Texto cargado con éxito!";
+                    await agregarFilaExcel(textoDetectado);
+                    setTimeout(() => {
+                        cerrarCamaraOCR();
+                        btn.disabled = false;
+                    }, 800);
+                } else {
+                    status.innerText = "No se detectó texto legible. Probá de nuevo.";
+                    btn.disabled = false;
+                }
+            } catch (error) {
+                status.innerText = "Error al procesar la imagen.";
+                btn.disabled = false;
+            }
         }
 
         function exportarCSV() {
