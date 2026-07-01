@@ -1,0 +1,18 @@
+{
+  "name": "TechFix OS",
+  "short_name": "TechFix",
+  "description": "Sistema de Gestión de Taller para Cesar",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#4f46e5",
+  "theme_color": "#4f46e5",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/563/563711.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
