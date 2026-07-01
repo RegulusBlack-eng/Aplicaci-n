@@ -8,7 +8,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <!-- Librería para lectura de texto con la cámara (OCR) -->
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
     <style>
         body { visibility: hidden; }
@@ -30,7 +29,6 @@
             </div>
         </header>
 
-        <!-- MENÚ DE PESTAÑAS (TICKETS Y PLACAS) -->
         <div class="flex bg-slate-200/70 p-1.5 rounded-2xl mb-8 gap-1 max-w-md mx-auto md:mx-0">
             <button onclick="cambiarPestana('tickets')" id="btn-tab-tickets" class="flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-wider transition-all bg-white text-indigo-900 shadow-md">
                 1. Tickets de Ingreso
@@ -40,7 +38,6 @@
             </button>
         </div>
 
-        <!-- PESTAÑA 1: TICKETS DE INGRESO -->
         <div id="section-tickets" class="tab-content">
             <section class="bg-white p-6 md:p-8 rounded-3xl shadow-xl border border-slate-100 mb-8">
                 <form id="repair-form" class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -62,7 +59,6 @@
                 </form>
             </section>
 
-            <!-- Buscador y Filtros -->
             <div class="mb-6 flex flex-col md:flex-row gap-4 items-center justify-between bg-white p-4 rounded-3xl border border-slate-100 shadow-sm">
                 <div class="relative w-full md:w-96">
                     <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
@@ -101,7 +97,6 @@
             </div>
         </div>
 
-        <!-- PESTAÑA 2: INVENTARIO DE REPUESTOS Y ESCÁNER OCR -->
         <div id="section-repuestos" class="tab-content hidden">
             <section class="bg-white p-6 md:p-8 rounded-3xl shadow-xl border border-slate-100 mb-8">
                 <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
@@ -120,25 +115,23 @@
                 </div>
 
                 <div class="overflow-x-auto border border-slate-100 rounded-2xl">
-                    <table class="w-full text-left border-collapse min-w-[600px]">
+                    <table class="w-full table-layout-fixed border-collapse min-w-[600px]">
                         <thead class="bg-slate-50 text-[10px] uppercase font-black text-slate-400 tracking-widest border-b border-slate-100">
                             <tr>
-                                <th class="py-3 px-4 border-r border-slate-100">Código / Modelo Texto</th>
-                                <th class="py-3 px-4 border-r border-slate-100">Descripción / Componente</th>
-                                <th class="py-3 px-4 border-r border-slate-100">Ubicación Estante</th>
+                                <th class="py-3 px-4 border-r border-slate-100 text-center">Código / Modelo Texto</th>
+                                <th class="py-3 px-4 border-r border-slate-100 text-center">Descripción / Componente</th>
+                                <th class="py-3 px-4 border-r border-slate-100 text-center">Ubicación Estante</th>
                                 <th class="py-3 px-4 text-center w-16">Acción</th>
                             </tr>
                         </thead>
                         <tbody id="excel-body" class="divide-y divide-slate-100 text-sm">
-                            <!-- Filas dinámicas de Excel -->
-                        </tbody>
+                            </tbody>
                     </table>
                 </div>
             </section>
         </div>
     </div>
 
-    <!-- MODAL DE LA CÁMARA OCR -->
     <div id="ocr-modal" class="fixed inset-0 bg-slate-900/90 backdrop-blur-md hidden flex-col items-center justify-center z-50 p-4">
         <div class="bg-white p-6 rounded-[2rem] shadow-2xl max-w-md w-full relative">
             <h3 class="text-lg font-black text-slate-900 mb-1 text-indigo-700 uppercase tracking-tight">Escáner de Texto de Placas</h3>
@@ -163,7 +156,6 @@
         </div>
     </div>
 
-    <!-- MODAL DEL QR -->
     <div id="qr-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md hidden items-center justify-center z-50 p-6">
         <div class="bg-white p-8 rounded-[2rem] shadow-2xl max-w-sm w-full text-center">
             <div id="qr-code" class="flex justify-center mb-6 p-4 bg-white rounded-2xl border-2 border-indigo-50"></div>
@@ -284,11 +276,11 @@
 
                 tableBody.innerHTML += `
                     <tr class="border-b hover:bg-slate-50 transition-colors text-sm">
-                        <td class="py-4 px-6">
+                        <td class="py-4 px-6 text-center">
                             <div class="font-mono font-bold text-indigo-600">#${t.id}</div>
                             <div class="text-[10px] text-slate-400 font-bold">${fechaTxt} ${horaTxt}hs</div>
                         </td>
-                        <td class="py-4 px-6">
+                        <td class="py-4 px-6 text-center">
                             <div class="font-bold text-slate-700">${t.cliente}</div>
                             <div class="text-[10px] text-slate-400 uppercase font-black tracking-tighter">${t.equipo}</div>
                         </td>
@@ -368,17 +360,17 @@
         function dibujarFilaExcel(r) {
             excelBody.innerHTML += `
                 <tr id="row-repuesto-${r.id}">
-                    <td contenteditable="true" onblur="guardarCeldaExcel(${r.id}, 'codigo_texto', this.innerText)" class="excel-cell py-3 px-4 font-mono font-bold text-slate-800 border-r border-slate-100">${r.codigo_texto || ''}</td>
-                    <td contenteditable="true" onblur="guardarCeldaExcel(${r.id}, 'descripcion', this.innerText)" class="excel-cell py-3 px-4 text-slate-600 border-r border-slate-100">${r.descripcion || ''}</td>
-                    <td contenteditable="true" onblur="guardarCeldaExcel(${r.id}, 'ubicacion', this.innerText)" class="excel-cell py-3 px-4 text-slate-600 border-r border-slate-100">${r.ubicacion || ''}</td>
+                    <td contenteditable="true" onblur="guardarCeldaExcel(${r.id}, 'codigo_texto', this.innerText)" class="excel-cell py-3 px-4 font-mono font-bold text-slate-800 text-center border-r border-slate-100">${r.codigo_texto || ''}</td>
+                    <td contenteditable="true" onblur="guardarCeldaExcel(${r.id}, 'descripcion', this.innerText)" class="excel-cell py-3 px-4 text-slate-600 text-center border-r border-slate-100">${r.descripcion || ''}</td>
+                    <td contenteditable="true" onblur="guardarCeldaExcel(${r.id}, 'ubicacion', this.innerText)" class="excel-cell py-3 px-4 text-slate-600 text-center border-r border-slate-100">${r.ubicacion || ''}</td>
                     <td class="py-3 px-4 text-center">
                         <button onclick="borrarFilaExcel(${r.id})" class="text-rose-300 hover:text-rose-500 transition"><i class="fas fa-trash-alt"></i></button>
                     </td>
                 </tr>`;
         }
 
-        async function agregarFilaExcel(codigoDefecto = '') {
-            const nuevaFila = { codigo_texto: codigoDefecto, descripcion: '', ubicacion: '' };
+        async function agregarFilaExcel(codigoDefecto = '', descDefecto = '') {
+            const nuevaFila = { codigo_texto: codigoDefecto, descripcion: descDefecto, ubicacion: '' };
             const { data } = await _supabase.from('repuestos').insert([nuevaFila]).select().single();
             if (data) dibujarFilaExcel(data);
         }
@@ -396,7 +388,7 @@
             }
         }
 
-        // --- LÓGICA DE LA CÁMARA LECTORA DE TEXTO (OCR) ---
+        // --- LÓGICA DE LA CÁMARA LECTORA DE TEXTO (OCR) + IDENTIFICACIÓN ---
         async function encenderCamaraOCR() {
             document.getElementById('ocr-status').innerText = "";
             document.getElementById('ocr-modal').classList.replace('hidden', 'flex');
@@ -440,8 +432,52 @@
                 const textoDetectado = result.data.text.trim().replace(/[^a-zA-Z0-9\-\s\/]/g, "");
 
                 if (textoDetectado.length > 2) {
-                    status.innerText = "¡Texto cargado con éxito!";
-                    await agregarFilaExcel(textoDetectado);
+                    status.innerText = "¡Texto leído! Identificando televisor...";
+                    
+                    // --- ALGORITMO DE DETECCIÓN DE MARCA Y PULGADAS ---
+                    let marca = "Genérico / Placa";
+                    let pulgadas = "";
+                    const textoUpper = textoDetectado.toUpperCase();
+
+                    // 1. Extraer Pulgadas (Primer grupo de 2 números seguidos que estén entre 19 y 99)
+                    const matchPulgadas = textoUpper.match(/\b(19|[2-9][0-9])\b/);
+                    if (matchPulgadas) {
+                        pulgadas = ` ${matchPulgadas[1]}"`;
+                    } else {
+                        // Búsqueda secundaria si no tiene espacios alrededor
+                        const matchPulgadasPegado = textoUpper.match(/(19|[2-9][0-9])/);
+                        if (matchPulgadasPegado) pulgadas = ` ${matchPulgadasPegado[1]}"`;
+                    }
+
+                    // 2. Reglas de Prefijos por Marca
+                    if (textoUpper.startsWith("UN") || textoUpper.startsWith("QN") || textoUpper.startsWith("HG") || textoUpper.includes("SAMSUNG")) {
+                        marca = "Samsung";
+                    } else if (textoUpper.startsWith("OLED") || textoUpper.startsWith("QNED") || /^(4K|5K|32|43|49|50|55|65|75)(U[KMDL]|L[BGH])/.test(textoUpper) || textoUpper.includes("LG")) {
+                        marca = "LG";
+                    } else if (textoUpper.includes("PHG") || textoUpper.includes("PFG") || textoUpper.includes("PUD") || textoUpper.includes("PHILIPS")) {
+                        marca = "Philips";
+                    } else if (textoUpper.startsWith("KDL") || textoUpper.startsWith("XBR") || textoUpper.startsWith("XR") || textoUpper.includes("SONY")) {
+                        marca = "Sony";
+                    } else if (textoUpper.startsWith("L32") || textoUpper.startsWith("L43") || textoUpper.includes("NOBLEX")) {
+                        marca = "Noblex";
+                    } else if (textoUpper.includes("TCL")) {
+                        marca = "TCL";
+                    } else if (textoUpper.includes("RCA")) {
+                        marca = "RCA";
+                    } else if (textoUpper.includes("B32") || textoUpper.includes("B43") || textoUpper.includes("BGH")) {
+                        marca = "BGH";
+                    } else if (textoUpper.includes("HISENSE")) {
+                        marca = "Hisense";
+                    }
+
+                    // Armamos el texto final de la descripción
+                    let descripcionFinal = `TV ${marca}${pulgadas}`;
+                    if (marca === "Genérico / Placa") {
+                        descripcionFinal = "Repuesto / Placa de TV";
+                    }
+
+                    await agregarFilaExcel(textoDetectado, descripcionFinal);
+                    
                     setTimeout(() => {
                         cerrarCamaraOCR();
                         btn.disabled = false;
