@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- Librería para lectura de texto con la cámara (OCR) -->
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
     <style>
         body { visibility: hidden; }
@@ -29,6 +30,7 @@
             </div>
         </header>
 
+        <!-- MENÚ DE PESTAÑAS (TICKETS Y PLACAS) -->
         <div class="flex bg-slate-200/70 p-1.5 rounded-2xl mb-8 gap-1 max-w-md mx-auto md:mx-0">
             <button onclick="cambiarPestana('tickets')" id="btn-tab-tickets" class="flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-wider transition-all bg-white text-indigo-900 shadow-md">
                 1. Tickets de Ingreso
@@ -38,6 +40,7 @@
             </button>
         </div>
 
+        <!-- PESTAÑA 1: TICKETS DE INGRESO -->
         <div id="section-tickets" class="tab-content">
             <section class="bg-white p-6 md:p-8 rounded-3xl shadow-xl border border-slate-100 mb-8">
                 <form id="repair-form" class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -59,6 +62,7 @@
                 </form>
             </section>
 
+            <!-- Buscador y Filtros -->
             <div class="mb-6 flex flex-col md:flex-row gap-4 items-center justify-between bg-white p-4 rounded-3xl border border-slate-100 shadow-sm">
                 <div class="relative w-full md:w-96">
                     <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
@@ -97,6 +101,7 @@
             </div>
         </div>
 
+        <!-- PESTAÑA 2: INVENTARIO DE REPUESTOS Y ESCÁNER OCR -->
         <div id="section-repuestos" class="tab-content hidden">
             <section class="bg-white p-6 md:p-8 rounded-3xl shadow-xl border border-slate-100 mb-8">
                 <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
@@ -125,13 +130,15 @@
                             </tr>
                         </thead>
                         <tbody id="excel-body" class="divide-y divide-slate-100 text-sm">
-                            </tbody>
+                            <!-- Filas dinámicas de Excel -->
+                        </tbody>
                     </table>
                 </div>
             </section>
         </div>
     </div>
 
+    <!-- MODAL DE LA CÁMARA OCR -->
     <div id="ocr-modal" class="fixed inset-0 bg-slate-900/90 backdrop-blur-md hidden flex-col items-center justify-center z-50 p-4">
         <div class="bg-white p-6 rounded-[2rem] shadow-2xl max-w-md w-full relative">
             <h3 class="text-lg font-black text-slate-900 mb-1 text-indigo-700 uppercase tracking-tight">Escáner de Texto de Placas</h3>
@@ -156,6 +163,7 @@
         </div>
     </div>
 
+    <!-- MODAL DEL QR -->
     <div id="qr-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md hidden items-center justify-center z-50 p-6">
         <div class="bg-white p-8 rounded-[2rem] shadow-2xl max-w-sm w-full text-center">
             <div id="qr-code" class="flex justify-center mb-6 p-4 bg-white rounded-2xl border-2 border-indigo-50"></div>
@@ -228,7 +236,7 @@
                 falla: document.getElementById('falla').value,
                 presupuesto: document.getElementById('presupuesto').value || '0',
                 sena: document.getElementById('sena').value || '0',
-                notes_internas: document.getElementById('notas_internas').value,
+                notas_internas: document.getElementById('notas_internas').value,
                 fecha_ingreso: editandoId ? undefined : new Date().toISOString()
             };
 
@@ -454,7 +462,7 @@
             const filas = ticketsDataGlobal.map(t => {
                 const p = parseFloat(t.presupuesto) || 0;
                 const s = parseFloat(t.sena) || 0;
-                const notasSeguras = t.notes_internas ? `"${t.notes_internas.replace(/"/g, '""')}"` : "";
+                const notasSeguras = t.notas_internas ? `"${t.notas_internas.replace(/"/g, '""')}"` : "";
                 return [t.id, t.fecha_ingreso, t.cliente, t.whatsapp, t.equipo, t.falla, p, s, (p-s), notasSeguras, t.estado];
             });
             let csvContent = "data:text/csv;charset=utf-8," + encabezados.join(",") + "\n" + filas.map(e => e.join(",")).join("\n");
@@ -477,7 +485,7 @@
             document.getElementById('falla').value = t.falla;
             document.getElementById('presupuesto').value = t.presupuesto || '';
             document.getElementById('sena').value = t.sena || '';
-            document.getElementById('notas_internas').value = t.notes_internas || '';
+            document.getElementById('notas_internas').value = t.notas_internas || '';
             submitBtn.innerText = "ACTUALIZAR TICKET";
             submitBtn.classList.replace('bg-indigo-600', 'bg-orange-500');
             window.scrollTo({ top: 0, behavior: 'smooth' });
